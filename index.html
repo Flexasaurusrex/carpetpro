@@ -194,10 +194,16 @@
                             <!-- Photo Upload -->
                             <div>
                                 <label class="block text-sm md:text-base font-bold mb-2">Photo:</label>
-                                <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
-                                <button type="button" onclick="document.getElementById('photoInput').click()" class="w-full bg-carpet-bronze hover:bg-carpet-copper px-4 py-3 rounded-lg font-bold text-sm md:text-base">
-                                    📷 Take/Upload Photo
-                                </button>
+                                <input type="file" id="photoInput" accept="image/*" class="hidden">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" onclick="document.getElementById('photoInput').click()" class="w-full bg-carpet-bronze hover:bg-carpet-copper px-4 py-3 rounded-lg font-bold text-xs md:text-sm">
+                                        📁 Choose Photo
+                                    </button>
+                                    <button type="button" onclick="takePhoto()" class="w-full bg-green-700 hover:bg-green-600 px-4 py-3 rounded-lg font-bold text-xs md:text-sm">
+                                        📷 Take Photo
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1 text-center">Choose from gallery or take new photo</div>
                                 <div id="photoPreview" class="mt-2 hidden">
                                     <img id="previewImg" class="w-full rounded-lg" />
                                 </div>
@@ -1229,6 +1235,15 @@
         // ========================================
         
         let calculatedKPSI = null;
+        
+        // Trigger camera specifically
+        function takePhoto() {
+            const input = document.getElementById('photoInput');
+            input.setAttribute('capture', 'environment');
+            input.click();
+            // Remove capture attribute after click so gallery still works
+            setTimeout(() => input.removeAttribute('capture'), 100);
+        }
         
         function showKPSICalculator() {
             document.getElementById('kpsiCalculatorModal').classList.remove('hidden');
