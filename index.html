@@ -32,6 +32,7 @@
         html { scroll-behavior: smooth; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -100%); } to { opacity: 1; transform: translate(-50%, 0); } }
         .fade-in { animation: fadeIn 0.5s; }
         .slide-in { animation: slideIn 0.5s; }
         .search-highlight { background-color: rgba(255, 215, 0, 0.2) !important; border: 3px solid #ffd700 !important; }
@@ -334,25 +335,176 @@
             }
         }
 
-        // Service Worker Registration
+        // Service Worker Registration with Update Detection
+        const APP_VERSION = '1.2.0'; // UPDATE THIS NUMBER WHEN YOU MAKE CHANGES
+        
         if ('serviceWorker' in navigator) {
             const sw = `
-                const CACHE_NAME = 'carpet-expert-v1';
+                const CACHE_NAME = 'carpet-expert-v${APP_VERSION}';
+                const urlsToCache = ['./', 'index.html'];
+                
                 self.addEventListener('install', (event) => {
-                    event.waitUntil(caches.open(CACHE_NAME));
+                    self.skipWaiting(); // Force new service worker to activate immediately
+                    event.waitUntil(
+                        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+                    );
                 });
+                
+                self.addEventListener('activate', (event) => {
+                    event.waitUntil(
+                        caches.keys().then(cacheNames => {
+                            return Promise.all(
+                                cacheNames.map(cacheName => {
+                                    if (cacheName !== CACHE_NAME) {
+                                        return caches.delete(cacheName); // Delete old caches
+                                    }
+                                })
+                            );
+                        })
+                    );
+                    return self.clients.claim(); // Take control immediately
+                });
+                
                 self.addEventListener('fetch', (event) => {
                     event.respondWith(
-                        caches.match(event.request).then(response => response || fetch(event.request))
+                        fetch(event.request)
+                            .then(response => {
+                                const responseClone = response.clone();
+                                caches.open(CACHE_NAME).then(cache => {
+                                    cache.put(event.request, responseClone);
+                                });
+                                return response;
+                            })
+                            .catch(() => caches.match(event.request))
                     );
                 });
             `;
             const blob = new Blob([sw], { type: 'application/javascript' });
             const swUrl = URL.createObjectURL(blob);
-            navigator.serviceWorker.register(swUrl);
+            
+            navigator.serviceWorker.register(swUrl).then(registration => {
+                // Check for updates every time app is opened
+                registration.update();
+                
+                // Listen for new service worker
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New version available!
+                            showUpdateNotification();
+                        }
+                    });
+                });
+            });
+            
+            // Refresh page when new service worker takes control
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
+        }
+        
+        function showUpdateNotification() {
+            const updateBanner = document.createElement('div');
+            updateBanner.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #d2691e 0%, #8b4513 100%);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+                z-index: 10000;
+                text-align: center;
+                max-width: 90%;
+                animation: slideDown 0.3s ease;
+            `;
+            updateBanner.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 8px;">🎉 New Update Available!</div>
+                <div style="font-size: 0.9em; margin-bottom: 12px;">Tap to refresh and get the latest features</div>
+                <button onclick="window.location.reload()" style="background: white; color: #8b4513; border: none; padding: 8px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                    Update Now
+                </button>
+            `;
+            document.body.appendChild(updateBanner);
         }
 
-        // Manifest Generation
+        // Manifest Generation with reliable icon
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        
+        // Background gradient
+        const bgGrad = ctx.createLinearGradient(0, 0, 512, 512);
+        bgGrad.addColorStop(0, '#8b4513');
+        bgGrad.addColorStop(1, '#d2691e');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, 512, 512);
+        
+        // Carpet base
+        const carpetGrad = ctx.createLinearGradient(0, 120, 0, 460);
+        carpetGrad.addColorStop(0, '#8b0000');
+        carpetGrad.addColorStop(0.5, '#dc143c');
+        carpetGrad.addColorStop(1, '#8b0000');
+        ctx.fillStyle = carpetGrad;
+        ctx.fillRect(100, 120, 312, 340);
+        
+        // Gold borders
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(115, 135, 282, 310);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(125, 145, 262, 290);
+        
+        // Central medallion
+        ctx.fillStyle = 'rgba(139, 69, 19, 0.7)';
+        ctx.beginPath();
+        ctx.arc(256, 290, 60, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
+        ctx.beginPath();
+        ctx.arc(256, 290, 45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#8b0000';
+        ctx.beginPath();
+        ctx.arc(256, 290, 30, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Corner decorations
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
+        [[160, 180], [352, 180], [160, 400], [352, 400]].forEach(([x, y]) => {
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        
+        // Fringe
+        ctx.strokeStyle = '#d2691e';
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.8;
+        for(let x = 120; x < 392; x += 20) {
+            ctx.beginPath();
+            ctx.moveTo(x, 460);
+            ctx.lineTo(x, x % 40 === 0 ? 485 : 480);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        
+        // Compass emoji
+        ctx.font = 'bold 80px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🧭', 256, 70);
+        
+        const iconDataUrl = canvas.toDataURL('image/png');
+        
         const manifest = {
             name: "Carpet Expert",
             short_name: "Carpet Expert",
@@ -364,15 +516,15 @@
             orientation: "portrait",
             icons: [
                 {
-                    src: "icon.svg",
+                    src: iconDataUrl,
                     sizes: "512x512",
-                    type: "image/svg+xml",
+                    type: "image/png",
                     purpose: "any maskable"
                 },
                 {
-                    src: "icon.svg",
+                    src: iconDataUrl,
                     sizes: "192x192",
-                    type: "image/svg+xml"
+                    type: "image/png"
                 }
             ]
         };
@@ -731,72 +883,375 @@
                 {
                     category: "Armenia",
                     title: "Armenian Dragon (Vishap)",
-                    content: "S-curved dragon motifs are distinctly Armenian, especially in Karabakh pieces. Look for hooked tongues and scale patterns. These are museum-quality finds.",
+                    content: "S-curved dragon motifs are distinctly Armenian, especially in Karabakh pieces. Look for hooked tongues and scale patterns. These are museum-quality finds. Paired combat dragons indicate pre-1850 work.",
                     value: "$8,000-$80,000+",
-                    keywords: "dragon vishap armenia karabakh s-curve scales high-value"
+                    keywords: "dragon vishap armenia karabakh s-curve scales high-value combat pre-1850"
                 },
                 {
                     category: "Azerbaijan",
                     title: "Shirvan Prayer Rugs",
                     content: "Prayer rugs (namazlyk) with distinctive mihrab arch. Tightly woven (100-180 KPSI) with dark blue or black fields. Often feature lamp or hands motifs.",
                     value: "$5,000-$40,000",
-                    keywords: "shirvan prayer mihrab azerbaijani niche arch high-value"
+                    keywords: "shirvan prayer mihrab azerbaijani niche arch high-value namazlyk lamp hands"
                 },
                 {
                     category: "Bulgaria",
                     title: "Chiprovtsi Reversible Kilims",
                     content: "UNESCO heritage textiles. CRITICAL TEST: Pattern must be identical on both sides. Diagonal ribbing on surface from oblique weaving. Natural dyes only.",
                     value: "$2,000-$40,000",
-                    keywords: "chiprovtsi bulgaria reversible unesco kilim rose very-high-value"
+                    keywords: "chiprovtsi bulgaria reversible unesco kilim rose very-high-value diagonal ribs"
                 },
                 {
                     category: "Azerbaijan",
                     title: "Kuba Fine Weaving",
                     content: "Finest weaving in Caucasus at 150-250 KPSI. Chi-Chi subtype with diagonal lattice is premium. Museum-quality pieces.",
                     value: "$10,000-$60,000",
-                    keywords: "kuba chi-chi azerbaijan fine-weave very-high-knot museum"
+                    keywords: "kuba chi-chi azerbaijan fine-weave very-high-knot museum lattice"
                 },
                 {
                     category: "Armenia",
                     title: "Karabakh Carpets",
                     content: "Large-scale floral motifs, especially roses and nightingales. Deep indigo backgrounds with rich reds. Famous for Eagle Kazak and Cloudband designs.",
                     value: "$15,000-$80,000+",
-                    keywords: "karabakh armenia eagle kazak cloudband roses high-value"
+                    keywords: "karabakh armenia eagle kazak cloudband roses nightingale high-value indigo"
                 },
                 {
                     category: "Dating",
                     title: "Pre-1900 Indicators",
                     content: "Wool warp AND weft threads, natural dyes only (madder, indigo, walnut), irregular knots, abrash color banding. Chemical smell = walk away.",
                     value: "Authentication Key",
-                    keywords: "pre-1900 19th-century natural-dyes wool authentication dating"
+                    keywords: "pre-1900 19th-century natural-dyes wool authentication dating abrash madder indigo"
                 },
                 {
                     category: "Albania",
                     title: "Albanian Kilims",
                     content: "Flat-weave with bold geometric designs. Traditionally made for dowries. Currently undervalued - emerging market opportunity.",
                     value: "$300-$10,000",
-                    keywords: "albania kilim flat-weave emerging undervalued geometric"
+                    keywords: "albania kilim flat-weave emerging undervalued geometric dowry"
                 },
                 {
                     category: "Symbols",
                     title: "Boteh (Paisley)",
                     content: "Teardrop flame motif from Zoroastrianism. Rows of boteh indicate Azerbaijani origin, particularly Shirvan or Baku region.",
                     value: "Medium Value",
-                    keywords: "boteh buta paisley azerbaijan shirvan flame"
+                    keywords: "boteh buta paisley azerbaijan shirvan flame zoroastrian baku"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Eagle (Artsiv) - Armenian National Symbol",
+                    content: "Double-headed eagle represents Armenian royalty and national identity. Single eagle = power and protection. 'Eagle Kazak' carpets are highly valuable. Look for spread wings or perched forms with detailed feather work.",
+                    value: "$8,000-$50,000+",
+                    keywords: "eagle artsiv bird armenian double-headed national kazak wings feathers royalty power"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Peacock (Taous) - Immortality Symbol",
+                    content: "Peacock with spread tail represents immortality and paradise. Armenian Christian symbol of resurrection. Also sacred in Yezidi religion. Look for distinctive eye patterns in tail feathers. High value indicator.",
+                    value: "$5,000-$40,000",
+                    keywords: "peacock taous bird armenian yezidi immortality paradise resurrection tail eyes feathers"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Nightingale (Sokhak) - Love & Romance",
+                    content: "Small bird paired with roses in Karabakh carpets. Symbol of pure love and soul's yearning. Common in Armenian poetry. Often in garden scenes with flowering branches.",
+                    value: "$10,000-$60,000",
+                    keywords: "nightingale sokhak bird armenian karabakh rose love romance garden poetry soul"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Rooster (Horoz) - Vigilance & Protection",
+                    content: "Common in village carpets. Rooster wards off evil spirits at dawn. Symbol of vigilance and reproductive fertility. Often depicted with elaborate tail feathers.",
+                    value: "$2,000-$15,000",
+                    keywords: "rooster horoz bird cock chicken village protection evil dawn fertility tail"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Dove (Aghavni) - Holy Spirit & Peace",
+                    content: "Christian symbol of Holy Spirit and peace. Often holds olive branch. Paired doves = marital harmony. Around cross motifs = Trinity representation.",
+                    value: "$5,000-$30,000",
+                    keywords: "dove aghavni bird armenian christian holy-spirit peace olive-branch harmony trinity"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Falcon/Hawk - Noble Hunting Bird",
+                    content: "Symbol of nobility, hunting prowess, and keen sight. Royal hunt scenes. Swift justice representation. Sharp vision = wisdom.",
+                    value: "$3,000-$20,000",
+                    keywords: "falcon hawk bird hunting noble vision wisdom royal swift predator"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Owl - Wisdom & Mystery",
+                    content: "Nocturnal knowledge symbol. Athena's bird. Night guardian. Sometimes ill omen in folklore. Rare but meaningful when present.",
+                    value: "$2,000-$12,000",
+                    keywords: "owl bird wisdom night nocturnal athena mystery knowledge guardian"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Swan - Grace & Fidelity",
+                    content: "Paired swans represent eternal love and fidelity. White = purity. Transformation symbol. Lake and pond scenes. Armenian and Persian carpets.",
+                    value: "$4,000-$25,000",
+                    keywords: "swan bird grace purity love fidelity transformation lake white armenian persian"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Duck - Adaptation & Harmony",
+                    content: "Three element symbolism (water-earth-air). Domestic bird. Paired ducks = marital harmony. Water birds in general.",
+                    value: "$2,000-$10,000",
+                    keywords: "duck bird water adaptation harmony domestic paired elements"
+                },
+                {
+                    category: "Symbols - Birds",
+                    title: "Parrot - Exotic Trade & Speech",
+                    content: "Indicates trade connections and exotic luxury. Speech and prophecy symbol. Bright colors = joy. Persian-influenced carpets.",
+                    value: "$3,000-$18,000",
+                    keywords: "parrot bird exotic trade speech colorful persian luxury prophecy"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Lion (Lev/Arslan) - Royal Power",
+                    content: "Symbol of royal power, courage, and sun. Persian influence. Lion-sun motif common. Paired with lamb = peace. Fighting stance = valor.",
+                    value: "$5,000-$35,000",
+                    keywords: "lion lev arslan animal persian royal courage sun lamb valor power"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Deer/Stag (Eljen) - Grace & Spirituality",
+                    content: "Antlered stag = masculine power. Doe = feminine grace. Paired = harmony. Common in hunting scenes. Spiritual aspiration symbol.",
+                    value: "$4,000-$25,000",
+                    keywords: "deer stag eljen animal antlers hunting grace spiritual harmony doe"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Horse (Dzi) - Nobility & Freedom",
+                    content: "Rider indicates nobility. Rearing horse = power. Pastoral scenes common. Tribal prestige symbol. Warrior status.",
+                    value: "$3,000-$20,000",
+                    keywords: "horse dzi animal nobility freedom warrior rider pastoral tribal power"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Camel - Trade & Endurance",
+                    content: "Silk Road symbol. Merchant wealth indicator. Single hump (dromedary) vs two-hump (Bactrian). Caravan scenes. Desert endurance.",
+                    value: "$2,000-$15,000",
+                    keywords: "camel animal trade silk-road merchant caravan desert endurance dromedary bactrian"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Ram - Fertility & Sacrifice",
+                    content: "Ram's horn (Koç Boynuzu) = S-curve spiral at corners. Male power, fertility, sacrifice (Ibrahim/Abraham). Aries zodiac. Tribal strength.",
+                    value: "$3,000-$18,000",
+                    keywords: "ram sheep horn animal spiral fertility sacrifice ibrahim abraham zodiac tribal"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Dog - Loyalty & Protection",
+                    content: "Rare in main field. Running Dog border pattern common. Guardian of flocks and home. Shepherd companion. Fidelity symbol.",
+                    value: "$2,000-$12,000",
+                    keywords: "dog animal loyalty protection guardian shepherd fidelity running-dog border"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Goat - Mountain Resilience",
+                    content: "Mountain goat in Caucasus. Sure-footed = overcoming obstacles. Horns = virility. Independence and climbing.",
+                    value: "$2,000-$10,000",
+                    keywords: "goat animal mountain caucasus resilience horns obstacles independence climbing"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Bear (Arj) - Armenian National Animal",
+                    content: "Bear = Arj in Armenian, related to Armenia name. Symbol of strength and courage. Protective power. Rare but significant when present.",
+                    value: "$5,000-$30,000",
+                    keywords: "bear arj animal armenian national strength courage protection rare"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Fox - Cunning & Wisdom",
+                    content: "Folklore trickster symbol. Clever survivor. Adaptation. Less common than other animals. Reynard tales influence.",
+                    value: "$2,000-$12,000",
+                    keywords: "fox animal cunning wisdom trickster folklore adaptation clever survivor"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Fish (Dzuk) - Abundance & Christianity",
+                    content: "Paired fish = fertility. Christian ichthys symbol. Water and life connection. Armenian church symbolism. Abundance.",
+                    value: "$3,000-$18,000",
+                    keywords: "fish dzuk animal water christian fertility abundance ichthys armenian church"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Scorpion (Karich) - Protection",
+                    content: "Apotropaic symbol - protects by threatening evil. Zodiac sign. Desert regions. Prominent tail sting. Danger and survival.",
+                    value: "$2,000-$10,000",
+                    keywords: "scorpion karich animal protection zodiac desert danger tail sting apotropaic"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Butterfly (Titer) - Soul & Resurrection",
+                    content: "Christian resurrection symbol. Paired with flowers. Symmetrical wing patterns. Transformation. Life cycle = human mortality.",
+                    value: "$3,000-$15,000",
+                    keywords: "butterfly titer animal insect soul resurrection transformation christian mortality wings"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Bee (Meghu) - Industry & Community",
+                    content: "Hive = organized society. Honey = prosperity. Worker ethic. Divine organization. Rare but meaningful.",
+                    value: "$3,000-$15,000",
+                    keywords: "bee meghu animal insect industry community hive honey prosperity organization"
+                },
+                {
+                    category: "Symbols - Animals",
+                    title: "Spider (Sard) - Weaving & Fate",
+                    content: "Master weaver (carpet metaphor!). Web of fate. Patience creates beauty. Feminine creation power. Philosophical symbol.",
+                    value: "$2,000-$12,000",
+                    keywords: "spider sard animal insect weaving fate web patience creation philosophical"
+                },
+                {
+                    category: "Symbols - Flowers",
+                    title: "Rose (Vard) - Armenian Love Symbol",
+                    content: "Red rose = passion. White = purity. Karabakh famous for rose carpets. 'Gul' means rose. Persian garden tradition. Central to Armenian identity.",
+                    value: "$8,000-$50,000",
+                    keywords: "rose vard flower armenian karabakh love passion purity gul garden persian"
+                },
+                {
+                    category: "Symbols - Flowers",
+                    title: "Pomegranate (Nur) - Fertility Symbol",
+                    content: "Many seeds = fertility. Unity in diversity. Armenian national symbol. Paradise fruit. Often shown opened revealing seeds.",
+                    value: "$5,000-$35,000",
+                    keywords: "pomegranate nur fruit armenian fertility seeds unity paradise national-symbol"
+                },
+                {
+                    category: "Symbols - Flowers",
+                    title: "Grape Vine (Khaghagh) - Georgian Wine Culture",
+                    content: "Georgian signature motif (ancient wine culture). Christian eucharist. Leaves and grape clusters. Harvest bounty and abundance.",
+                    value: "$4,000-$25,000",
+                    keywords: "grape vine khaghagh georgian wine christian eucharist harvest abundance leaves clusters"
+                },
+                {
+                    category: "Symbols - Flowers",
+                    title: "Tulip (Lale) - Ottoman Luxury",
+                    content: "Ottoman signature flower from 'Tulip Era' Turkey. Simple 3-petal form. Perfect love symbol. Persian origin. Paradise garden flower.",
+                    value: "$3,000-$18,000",
+                    keywords: "tulip lale flower ottoman turkish persian love paradise garden three-petal"
+                },
+                {
+                    category: "Symbols - Flowers",
+                    title: "Lotus - Purity & Enlightenment",
+                    content: "Buddhist/Hindu symbol via Silk Road. Sacred flower. Rises pure from muddy water = spiritual transcendence and rebirth.",
+                    value: "$4,000-$22,000",
+                    keywords: "lotus flower buddhist hindu silk-road purity enlightenment rebirth transcendence sacred"
+                },
+                {
+                    category: "Symbols - Flowers",
+                    title: "Carnation (Mekhak) - Divine Love",
+                    content: "Christian passion flower. Ruffled petals distinctive. Pink and red common colors. Mother's love. Ottoman favorite.",
+                    value: "$2,000-$12,000",
+                    keywords: "carnation mekhak flower christian passion love mother ottoman ruffled petals"
+                },
+                {
+                    category: "Symbols - Flowers",
+                    title: "Cypress Tree (Sarv) - Eternity",
+                    content: "Evergreen = eternal life. Cemetery tree = death/mourning. Flame-like shape. Persian gardens. Zoroastrian sacred tree.",
+                    value: "$3,000-$18,000",
+                    keywords: "cypress sarv tree evergreen eternity death mourning persian zoroastrian sacred flame"
                 }
             ];
         }
 
         function getSymbolData() {
             return [
-                { icon: "🐉", name: "Dragon (Vishap)", meaning: "Power, protection, water guardian", info: "S-curve Armenian dragons are museum-quality", value: "very-high", valueLabel: "VERY HIGH VALUE" },
-                { icon: "🕌", name: "Prayer Niche (Mihrab)", meaning: "Direction to Mecca", info: "Prayer rugs always premium items", value: "very-high", valueLabel: "VERY HIGH VALUE" },
-                { icon: "✝️", name: "Cross Patterns", meaning: "Christian faith, sacred center", info: "High value in Armenian/Georgian/Bulgarian pieces", value: "high", valueLabel: "HIGH VALUE" },
-                { icon: "🔷", name: "Boteh (Paisley)", meaning: "Zoroastrian flame, life force", info: "Common but desirable in Azerbaijani work", value: "medium", valueLabel: "MEDIUM VALUE" },
-                { icon: "⭐", name: "Eight-Pointed Star", meaning: "Celestial guidance, infinity", info: "High when combined with geometric borders", value: "high", valueLabel: "HIGH VALUE" },
-                { icon: "🌳", name: "Tree of Life", meaning: "Immortality, earth-heaven connection", info: "High value especially with birds/animals", value: "high", valueLabel: "HIGH VALUE" },
-                { icon: "🌹", name: "Chiprovtsi Rose", meaning: "Beauty, Bulgarian heritage", info: "Unique to UNESCO Chiprovtsi carpets", value: "very-high", valueLabel: "VERY HIGH (Bulgaria)" },
-                { icon: "🐺", name: "Running Dog Border", meaning: "Protection, loyalty", info: "Common in quality Shirvan pieces", value: "medium", valueLabel: "MEDIUM VALUE" }
+                // VERY HIGH VALUE SYMBOLS
+                { icon: "🐉", name: "Dragon (Vishap/Ejder)", meaning: "Power, protection, water source guardian", info: "S-curved Armenian dragons are museum-quality. Look for paired combat dragons, scale patterns, hooked tongues. Karabakh specialty. Pre-1850 indicator.", value: "very-high", valueLabel: "VERY HIGH VALUE", regions: "Armenian, Azerbaijani" },
+                { icon: "🕌", name: "Prayer Niche (Mihrab)", meaning: "Direction to Mecca, portal to divine", info: "Prayer rugs always premium. Look for pointed arch, lamp above (kandil), hands below. Shirvan, Kuba masters.", value: "very-high", valueLabel: "VERY HIGH VALUE", regions: "Azerbaijani, Turkish" },
+                { icon: "🦅", name: "Eagle (Artsiv)", meaning: "Divine messenger, Armenian national symbol, freedom", info: "Double-headed eagle = Armenian royalty. Single eagle = power, protection. 'Eagle Kazak' carpets highly valuable. Spread wings or perched.", value: "very-high", valueLabel: "VERY HIGH VALUE", regions: "Armenian, Caucasian" },
+                { icon: "🌹", name: "Chiprovtsi Rose", meaning: "Beauty, Bulgarian heritage, UNESCO symbol", info: "Unique to Chiprovtsi kilims. Stylized 8-petaled flower, diagonal stems. REVERSIBILITY TEST CRITICAL.", value: "very-high", valueLabel: "VERY HIGH VALUE", regions: "Bulgarian" },
+                { icon: "🐍", name: "Serpent/Water Dragon", meaning: "Water guardian, wisdom, transformation, fertility", info: "Sinuous S-curves, often paired in combat. Armenian specialty. Different from Chinese dragons - more abstract, geometric.", value: "very-high", valueLabel: "VERY HIGH VALUE", regions: "Armenian, Caucasian" },
+                
+                // HIGH VALUE SYMBOLS
+                { icon: "✝️", name: "Cross Patterns (Khach/Khachkar)", meaning: "Christian faith, four cardinal directions, sacred center", info: "Armenian crosses have elaborate floral terminals. Georgian Bolnisi cross = unique stepped form. Indicates Christian weaver = Armenian/Georgian origin.", value: "high", valueLabel: "HIGH VALUE", regions: "Armenian, Georgian, Bulgarian" },
+                { icon: "🦚", name: "Peacock (Taous)", meaning: "Immortality, paradise, Yezidi sacred symbol", info: "Spread tail = full glory. Armenian Christian symbol of resurrection. Also Yezidi religious significance. Look for eye patterns in tail.", value: "high", valueLabel: "HIGH VALUE", regions: "Armenian, Kurdish" },
+                { icon: "🐦", name: "Nightingale (Sokhak)", meaning: "Love, spring, soul's yearning, romance", info: "Small bird paired with roses in Karabakh carpets. Symbol of pure love. Often in garden scenes. Armenian poetry symbol.", value: "high", valueLabel: "HIGH VALUE", regions: "Armenian, Persian" },
+                { icon: "🐓", name: "Rooster (Horoz)", meaning: "Vigilance, dawn, protection from evil", info: "Common in village carpets. Wards off evil spirits. Reproductive fertility symbol. Often with elaborate tail feathers.", value: "high", valueLabel: "HIGH VALUE", regions: "Caucasian, Turkish" },
+                { icon: "🦌", name: "Deer/Stag (Եղջերու/Eljen)", meaning: "Grace, gentleness, spiritual aspiration", info: "Antlered stag = masculine power. Doe = feminine grace. Paired = harmony. Common in hunting scenes.", value: "high", valueLabel: "HIGH VALUE", regions: "Armenian, Persian" },
+                { icon: "🦁", name: "Lion (Lev/Arslan)", meaning: "Royal power, courage, sun symbol", info: "Persian influence. Lion-sun motif common. Paired with lamb = peace. Fighting stance = valor.", value: "high", valueLabel: "HIGH VALUE", regions: "Persian, Caucasian" },
+                { icon: "🌳", name: "Tree of Life (Hayat Ağacı)", meaning: "Immortality, connection earth-heaven, cosmic axis", info: "Cypress (narrow) = death/mourning. Pomegranate tree = fertility. Plane tree = wisdom. Birds in branches add value.", value: "high", valueLabel: "HIGH VALUE", regions: "All regions" },
+                { icon: "🌙", name: "Cloudband (Chi)", meaning: "Buddhist cloud, good fortune, Chinese origin", info: "Chi-shaped curves in borders. Pre-1850 Karabakh indicator. Shows Silk Road trade influence. Paired with dragons.", value: "high", valueLabel: "HIGH VALUE", regions: "Armenian, Azerbaijani" },
+                { icon: "💠", name: "Memling Gul", meaning: "Medieval Christian symbol from paintings", info: "Octagonal medallion with cruciform center. Named after 15th c. painter. Indicates quality Shirvan/Kuba work.", value: "high", valueLabel: "HIGH VALUE", regions: "Azerbaijani" },
+                { icon: "🌿", name: "Palmette (Shah Abbas)", meaning: "Lotus flower, rebirth, Persian luxury", info: "Multi-lobed floral form. Persian influence indicator. In borders or field. Safavid dynasty symbol.", value: "high", valueLabel: "HIGH VALUE", regions: "Persian-influenced Caucasian" },
+                { icon: "🏺", name: "Elibelinde (Hands on Hips)", meaning: "Mother goddess, fertility, female power, protection", info: "Diamond with protruding triangular 'arms'. Ancient Anatolian fertility goddess. Common in tribal work.", value: "high", valueLabel: "HIGH VALUE", regions: "Turkish, Caucasian" },
+                { icon: "🦋", name: "Butterfly (Թիթեռ/Titer)", meaning: "Soul, transformation, resurrection, spring", info: "Christian resurrection symbol. Paired with flowers. Symmetrical wing patterns. Short lifecycle = human mortality.", value: "high", valueLabel: "HIGH VALUE", regions: "Armenian, Persian" },
+                { icon: "🕊️", name: "Dove (Աղավնի/Aghavni)", meaning: "Holy Spirit, peace, purity, messenger", info: "Christian symbol. Often holds olive branch. Paired = marital harmony. Around cross = Trinity.", value: "high", valueLabel: "HIGH VALUE", regions: "Armenian, Georgian" },
+                { icon: "🐎", name: "Horse (Ձի/Dzi)", meaning: "Nobility, freedom, warrior status, speed", info: "Rider indicates nobility. Rearing = power. Pastoral scenes common. Tribal prestige symbol.", value: "high", valueLabel: "HIGH VALUE", regions: "Caucasian, Turkish" },
+                { icon: "🐪", name: "Camel (Ուղտ/Ught)", meaning: "Endurance, desert journey, trade, wealth", info: "Silk Road symbol. Merchant wealth. Single hump (dromedary) vs two-hump (Bactrian). Caravan scenes.", value: "high", valueLabel: "HIGH VALUE", regions: "Azerbaijani, Turkmen" },
+                
+                // MEDIUM-HIGH VALUE SYMBOLS
+                { icon: "🔷", name: "Boteh (Buta/Paisley)", meaning: "Zoroastrian flame, cypress, life force", info: "Teardrop/flame shape. Rows indicate Azerbaijani (Shirvan/Baku). Single = Persian. Fire worship symbol.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Azerbaijani, Persian" },
+                { icon: "⭐", name: "Eight-Pointed Star (Göl)", meaning: "Celestial guidance, pre-Islamic sun, infinity", info: "Caucasian stars more angular than Persian. Eight points = cosmic order. Turkmen tribal guls.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian, Turkmen" },
+                { icon: "✡️", name: "Six-Pointed Star (Solomon's Seal)", meaning: "Divine protection, harmony opposites, Jewish/Muslim", info: "Two overlapping triangles. ▲ (fire/male) + ▼ (water/female) = balance. Apotropaic (evil protection).", value: "medium", valueLabel: "MEDIUM VALUE", regions: "All regions" },
+                { icon: "🌟", name: "Five-Pointed Star", meaning: "Human form, five senses, Islamic symbol", info: "Arms-legs-head representation. Five pillars of Islam. Less common than 8-point in Caucasian work.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Islamic regions" },
+                { icon: "🐏", name: "Ram's Horn (Koç Boynuzu)", meaning: "Male power, fertility, sacrifice, protection", info: "S-curve spiral at medallion corners. Aries zodiac. Sacrifice symbol (Ibrahim/Abraham). Tribal strength.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian, Turkish" },
+                { icon: "🐺", name: "Running Dog Border (Kurt İzi)", meaning: "Protection, loyalty, guardian spirit, path", info: "Reciprocal Z-pattern creating chain. 'Dog's track'. Common Shirvan border. Continuous protection line.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Azerbaijani" },
+                { icon: "🐕", name: "Dog (Շուն/Shun)", meaning: "Loyalty, protection, fidelity, shepherd companion", info: "Rare in main field. More common in border as 'running dog'. Guardian of flocks and home.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian" },
+                { icon: "🐑", name: "Sheep (Ոչխար/Vochkhar)", meaning: "Wealth, pastoral life, sacrifice, abundance", info: "Flock = wealth indicator. Shepherd scenes. Wool source symbol. Rural life depiction.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian, Anatolian" },
+                { icon: "🐐", name: "Goat (Այծ/Ayts)", meaning: "Mountain resilience, independence, climbing", info: "Mountain goat in Caucasus. Sure-footed = overcoming obstacles. Horns = virility.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian, Kurdish" },
+                { icon: "🦊", name: "Fox (Աղուես/Aghves)", meaning: "Cunning, wisdom, adaptation, trickster", info: "Folklore symbol. Clever survivor. Less common than other animals. Reynard tales influence.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian" },
+                { icon: "🐻", name: "Bear (Արջ/Arj)", meaning: "Strength, courage, Armenia itself (Arj=bear)", info: "Armenian national animal. Protective power. Rare in carpets but significant when present.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Armenian" },
+                { icon: "🐝", name: "Bee (Մեղու/Meghu)", meaning: "Industry, community, divine organization, sweetness", info: "Hive = organized society. Honey = prosperity. Worker ethic. Rare but meaningful.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Armenian, Georgian" },
+                { icon: "🦂", name: "Scorpion (Կարիճ/Karich)", meaning: "Protection, danger, desert survival, zodiac", info: "Apotropaic - protects by threatening evil. Zodiac sign. Desert regions. Tail sting prominent.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Persian, Turkmen" },
+                { icon: "🐢", name: "Turtle/Tortoise", meaning: "Longevity, stability, wisdom, cosmic support", info: "World-bearer in some cosmologies. Slow wisdom. Rare symbol. Protective shell.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Persian, Central Asian" },
+                { icon: "🐠", name: "Fish (Ձուկ/Dzuk)", meaning: "Abundance, fertility, water, Christian symbol", info: "Paired fish = fertility. Christian ichthys symbol. Water/life connection. Armenian church symbolism.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Armenian, Christian" },
+                { icon: "🦅", name: "Falcon/Hawk (Բազե/Baze)", meaning: "Hunting, nobility, keen sight, speed", info: "Noble hunting bird. Sharp vision = wisdom. Royal hunt symbol. Swift justice.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Persian, Caucasian" },
+                { icon: "🦉", name: "Owl (Բու/Bu)", meaning: "Wisdom, night vision, mystery, death", info: "Nocturnal knowledge. Sometimes ill omen. Athena's bird. Night guardian.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Armenian" },
+                { icon: "🦢", name: "Swan (Կարապ/Karap)", meaning: "Grace, purity, transformation, fidelity", info: "Paired swans = eternal love. White = purity. Transformation (ugly duckling). Lake scenes.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Armenian, Persian" },
+                { icon: "🦆", name: "Duck (Բադ/Bad)", meaning: "Adaptation, water-earth-air, resourceful", info: "Three element symbolism. Domestic bird. Paired = marital harmony. Water birds general.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian" },
+                { icon: "🐓", name: "Hen (Հավ/Hav)", meaning: "Motherhood, nurturing, fertility, domestic", info: "With chicks = motherhood. Egg-layer = fertility. Domestic abundance. Rural life.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Village carpets" },
+                { icon: "🪿", name: "Goose (Սագ/Sag)", meaning: "Vigilance, migration, seasonal change, fidelity", info: "Watchful guardian. Migration = seasons. Mate for life = fidelity. Honking = alarm.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian" },
+                { icon: "🦜", name: "Parrot (Աղաղակ/Aghaghak)", meaning: "Speech, imitation, exotic, colorful", info: "Trade connections. Exotic luxury. Speech/prophecy. Bright colors = joy.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Persian-influenced" },
+                { icon: "🕷️", name: "Spider (Սարդ/Sard)", meaning: "Weaving, fate, creation, patience", info: "Master weaver (carpet metaphor!). Web of fate. Patience creates beauty. Feminine creation.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Philosophical symbol" },
+                
+                // FLORAL & PLANT SYMBOLS
+                { icon: "🌹", name: "Rose (Վարդ/Vard)", meaning: "Love, beauty, paradise, Armenian identity", info: "Red rose = passion. White = purity. Karabakh famous for roses. 'Gul' carpets. Persian garden tradition.", value: "high", valueLabel: "HIGH VALUE", regions: "Armenian, Persian" },
+                { icon: "🌺", name: "Lotus", meaning: "Purity, enlightenment, rebirth, rising from mud", info: "Buddhist/Hindu symbol via Silk Road. Sacred flower. Rises pure from muddy water = spiritual transcendence.", value: "high", valueLabel: "HIGH VALUE", regions: "Persian, Silk Road" },
+                { icon: "🌷", name: "Tulip (Լալե/Lale)", meaning: "Perfect love, Ottoman luxury, spring, paradise", info: "Ottoman signature flower. 'Tulip Era' Turkey. Simple 3-petal form. Persian origin. Paradise garden.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Turkish, Persian" },
+                { icon: "🌻", name: "Sunflower", meaning: "Sun worship, turning to divine, loyalty, summer", info: "Follows sun = devotion to God. Large medallion-like form. Later introduction (New World origin).", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Later carpets" },
+                { icon: "🌼", name: "Carnation (Մեխակ/Mekhak)", meaning: "Divine love, pure affection, mother's love", info: "Christian passion flower. Ruffled petals distinctive. Pink/red common. Ottoman favorite.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Turkish, Armenian" },
+                { icon: "🏵️", name: "Rosette (General)", meaning: "Divine perfection, sun, radial harmony, center", info: "Geometric flower form. 6, 8, 12 petals common. Central medallion or scattered. Universal symbol.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "All regions" },
+                { icon: "🍇", name: "Grape Vine (Խաղող/Khaghagh)", meaning: "Wine, sacred blood, Georgian identity, abundance", info: "Georgian signature (ancient wine culture). Christian eucharist. Leaves and clusters. Harvest bounty.", value: "high", valueLabel: "HIGH VALUE (Georgian)", regions: "Georgian, Armenian" },
+                { icon: "🍎", name: "Pomegranate (Նուռ/Nur)", meaning: "Fertility, abundance, unity, Armenia symbol", info: "Many seeds = fertility. Unity in diversity. Armenian national symbol. Paradise fruit. Opened showing seeds.", value: "high", valueLabel: "HIGH VALUE", regions: "Armenian, Persian" },
+                { icon: "🌾", name: "Wheat Ear (Ցորեն/Ts'oren)", meaning: "Harvest, bread of life, prosperity, agricultural", info: "Staff of life. Harvest abundance. Rural wealth. Christian bread symbolism.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Agricultural regions" },
+                { icon: "🌿", name: "Cypress Tree (Սարվ/Sarv)", meaning: "Eternity, mourning, graveyard, Zoroastrian sacred", info: "Evergreen = eternal life. Cemetery tree = death. Flame-like shape. Persian gardens. Zoroastrian holy tree.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Persian, Azerbaijani" },
+                { icon: "🍃", name: "Leaf Scroll (Islimi)", meaning: "Growth, life force, Islamic art, continuous", info: "Flowing vine arabesque. Continuous growth. Islamic prohibition on figures = floral art excellence.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Islamic regions" },
+                { icon: "🌸", name: "Cherry Blossom", meaning: "Spring, renewal, ephemeral beauty, rebirth", info: "Brief bloom = life's transience. Spring renewal. Japanese/Persian garden influence.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Persian" },
+                { icon: "🪷", name: "Water Lily", meaning: "Purity, floating grace, pond life, peace", info: "Floats on water = spiritual rising. Pond gardens. Related to lotus symbolism.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Persian gardens" },
+                
+                // GEOMETRIC & ABSTRACT SYMBOLS
+                { icon: "💎", name: "Diamond (Almast)", meaning: "Protection, evil eye, vaginal, feminine power", info: "Female symbol (womb). Elibelinde base form. Protective geometry. Stacked diamonds common.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Tribal carpets" },
+                { icon: "🔺", name: "Triangle (Muska)", meaning: "Amulet, protection, trinity, mountain", info: "Point up = masculine/fire. Point down = feminine/water. Trinity symbol. Caucasus mountains. Protective talisman.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "All regions" },
+                { icon: "⬛", name: "Square/Rectangle", meaning: "Earth, stability, four directions, order", info: "Four cardinal directions. Earthly realm. Stable foundation. Enclosed space = protection.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Geometric carpets" },
+                { icon: "⭕", name: "Circle", meaning: "Eternity, sun, wholeness, divine perfection", info: "No beginning/end = eternal. Sun disc. Mandala. Perfect divine form.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Medallion carpets" },
+                { icon: "💠", name: "Octagon", meaning: "Islamic architecture, transition square-circle, cosmic", info: "Eight directions. Dome transition geometry. Islamic tile work. Heaven/earth connection.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Islamic" },
+                { icon: "🔄", name: "Swastika (Haç)", meaning: "Ancient sun, good fortune, Aryan origin, pre-Nazi", info: "Right-facing = good fortune (pre-Nazi meaning only). Sun wheel. Indo-European. Caucasian pre-Christian.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Pre-1930 Caucasian" },
+                { icon: "👁️", name: "Evil Eye (Nazar)", meaning: "Protection from envy, ward off malice, blue eye", info: "Blue eye motif. Protective talisman. Deflects jealousy. Very common in Turkish/Caucasian.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Turkish, Caucasian" },
+                { icon: "⚡", name: "Lightning (Yıldırım)", meaning: "Divine power, heaven's wrath, sudden illumination", info: "Zigzag diagonal patterns. God's power. Sudden truth. Sky fire. Kazak carpets.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian" },
+                { icon: "☀️", name: "Sun (Արև/Arev)", meaning: "Life giver, divine light, Mithra worship, heat", info: "Solar worship (pre-Christian). Life source. Armenian Arev. Radial patterns. Central medallion often sun.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Pre-Christian Caucasian" },
+                { icon: "🌙", name: "Moon/Crescent", meaning: "Islamic symbol, night, feminine, cycle, change", info: "Crescent with star = Islam. Lunar cycle = time/change. Feminine counterpart to sun.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Islamic" },
+                { icon: "💫", name: "Star Patterns (General)", meaning: "Heaven, divine guidance, night sky, fate", info: "Night sky representation. Divine order. Astrology. Multiple stars = cosmic arrangement.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "All regions" },
+                { icon: "🪬", name: "Hamsa (Hand of Fatima)", meaning: "Protection, blessing, five fingers, warding", info: "Open palm. Five fingers. Islamic/Jewish protection. Ward off evil eye. Middle Eastern.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Islamic, Jewish" },
+                { icon: "🔱", name: "Trident", meaning: "Triple power, Shiva, three realms, strength", info: "Rare in carpets. Hindu/Buddhist via trade. Three points = trinity/realms. Power symbol.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Trade route carpets" },
+                { icon: "♾️", name: "Infinity/Endless Knot", meaning: "Eternal cycle, Buddhist wisdom, interconnection", info: "Buddhist endless knot. No beginning/end. Interconnected existence. Wisdom-compassion union.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Buddhist-influenced" },
+                
+                // SPECIAL PATTERNS & MOTIFS  
+                { icon: "🏛️", name: "Architectural (Buildings)", meaning: "Mosque, church, sacred space, prayer direction", info: "Mosque with minaret. Church with dome. Sacred architecture. Prayer rug specific.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Prayer rugs" },
+                { icon: "⛲", name: "Fountain/Water", meaning: "Paradise, life source, garden, purity", info: "Paradise garden water source. Persian chahar bagh. Life-giving water. Ritual purity.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Persian garden carpets" },
+                { icon: "🕯️", name: "Lamp/Kandil", meaning: "Divine light, mosque lamp, prayer, illumination", info: "Mosque lamp in prayer niche. Divine guidance light. Knowledge illumination. Hanging from mihrab.", value: "high", valueLabel: "HIGH VALUE", regions: "Prayer rugs" },
+                { icon: "📿", name: "Prayer Beads", meaning: "Devotion, counting prayers, meditation, Islam", info: "Islamic tasbih. 33 or 99 beads. Prayer counting. Devotional life.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Islamic" },
+                { icon: "🗡️", name: "Sword (Սուր/Sur)", meaning: "Warrior status, justice, Ali's Zulfiqar, power", info: "Double-edged = justice both ways. Zulfiqar (forked tip) = Shia Islam. Warrior class. Noble weapon.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Warrior cultures" },
+                { icon: "🏹", name: "Bow & Arrow", meaning: "Hunter, warrior, distance power, precision", info: "Hunting nobility. Military prowess. Striking from distance. Precision/skill.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Nomadic cultures" },
+                { icon: "🛡️", name: "Shield", meaning: "Protection, defense, warrior, clan emblem", info: "Military protection. Clan identity. Defensive power. Coat of arms equivalent.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Warrior carpets" },
+                { icon: "👑", name: "Crown", meaning: "Royalty, divine authority, sovereignty, heaven", info: "Royal power. Divine right. Stepped crown = castle battlements. Heavenly crown.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Royal workshop carpets" },
+                { icon: "🔥", name: "Fire/Flame", meaning: "Zoroastrian sacred, purification, divine, passion", info: "Zoroastrian sacred fire. Purification. Divine presence. Passion/love. Boteh flame.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Zoroastrian, Persian" },
+                { icon: "🌊", name: "Water Waves", meaning: "Life source, flow, purification, change", info: "Flowing water = life. River of life. Purification ritual. Constant change/flow.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Border patterns" },
+                { icon: "⛰️", name: "Mountain (Լեռ/Ler)", meaning: "Caucasus, sacred peak, Ararat, divine dwelling", info: "Mt. Ararat = Armenian sacred. Caucasus peaks. Gods' dwelling. Spiritual ascent. Stepped forms.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Caucasian" },
+                { icon: "🌈", name: "Rainbow", meaning: "Divine covenant, bridge, hope, Noah's promise", info: "Biblical covenant. Heaven-earth bridge. After storm hope. Seven colors. Rare but meaningful.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Christian Armenian" },
+                { icon: "☁️", name: "Clouds", meaning: "Heaven, divine realm, transformation, rain blessing", info: "Cloudbands (chi). Divine realm. Rain bringer = blessing. Sky symbols. Chinese influence.", value: "medium", valueLabel: "MEDIUM VALUE", regions: "Silk Road carpets" }
             ];
         }
 
