@@ -129,9 +129,6 @@
             </button>
         </div>
 
-        <!-- QUICK ID TAB -->
-        <div id="quick-id" class="tab-content active fade-in">
-
         <!-- FRAGMENT DATABASE TAB -->
         <div id="database" class="tab-content hidden">
             <div class="bg-carpet-medium p-4 md:p-6 rounded-xl shadow-xl">
@@ -505,7 +502,7 @@
             </div>
         </div>
 
-        <!-- SEARCH TAB (existing) -->
+        <!-- QUICK ID TAB -->
         <div id="quick-id" class="tab-content active fade-in">
             <div class="bg-gradient-to-br from-carpet-medium to-carpet-dark p-4 md:p-8 rounded-xl md:rounded-2xl border-4 border-carpet-bronze shadow-xl">
                 <h2 class="text-xl md:text-3xl font-bold text-carpet-gold mb-4 md:mb-6">⚡ Quick Fragment Identifier</h2>
@@ -1517,7 +1514,7 @@
         // ========================================
 
         // Service Worker Registration with Update Detection
-        const APP_VERSION = '1.2.0'; // UPDATE THIS NUMBER WHEN YOU MAKE CHANGES
+        const APP_VERSION = '2.0.0'; // UPDATE THIS NUMBER WHEN YOU MAKE CHANGES
         
         if ('serviceWorker' in navigator) {
             const sw = `
@@ -1537,6 +1534,7 @@
                             return Promise.all(
                                 cacheNames.map(cacheName => {
                                     if (cacheName !== CACHE_NAME) {
+                                        console.log('Deleting old cache:', cacheName);
                                         return caches.delete(cacheName); // Delete old caches
                                     }
                                 })
@@ -1547,25 +1545,39 @@
                 });
                 
                 self.addEventListener('fetch', (event) => {
-                    event.respondWith(
-                        fetch(event.request)
-                            .then(response => {
-                                const responseClone = response.clone();
-                                caches.open(CACHE_NAME).then(cache => {
-                                    cache.put(event.request, responseClone);
-                                });
-                                return response;
-                            })
-                            .catch(() => caches.match(event.request))
-                    );
+                    // Network-first strategy for HTML files (always get fresh)
+                    if (event.request.url.includes('index.html') || event.request.mode === 'navigate') {
+                        event.respondWith(
+                            fetch(event.request)
+                                .then(response => {
+                                    const responseClone = response.clone();
+                                    caches.open(CACHE_NAME).then(cache => {
+                                        cache.put(event.request, responseClone);
+                                    });
+                                    return response;
+                                })
+                                .catch(() => caches.match(event.request))
+                        );
+                    } else {
+                        // Cache-first for other resources
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(response => response || fetch(event.request))
+                        );
+                    }
                 });
             `;
             const blob = new Blob([sw], { type: 'application/javascript' });
             const swUrl = URL.createObjectURL(blob);
             
             navigator.serviceWorker.register(swUrl).then(registration => {
-                // Check for updates every time app is opened
+                // Force update check immediately
                 registration.update();
+                
+                // Check for updates every 30 seconds while app is open
+                setInterval(() => {
+                    registration.update();
+                }, 30000);
                 
                 // Listen for new service worker
                 registration.addEventListener('updatefound', () => {
@@ -1608,7 +1620,7 @@
             `;
             updateBanner.innerHTML = `
                 <div style="font-weight: bold; margin-bottom: 8px;">🎉 New Update Available!</div>
-                <div style="font-size: 0.9em; margin-bottom: 12px;">Tap to refresh and get the latest features</div>
+                <div style="font-size: 0.9em; margin-bottom: 12px;">v2.0.0 - Fragment Database + Smart Analysis</div>
                 <button onclick="window.location.reload()" style="background: white; color: #8b4513; border: none; padding: 8px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">
                     Update Now
                 </button>
