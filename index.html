@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#8b4513">
+    <meta name="description" content="Expert field guide for identifying and authenticating valuable Caucasian carpet fragments">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Carpet Expert">
+    <link rel="manifest" id="manifest-placeholder">
+    <title>Carpet Expert - Field Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'carpet-dark': '#1a1a2e',
+                        'carpet-medium': '#2d3250',
+                        'carpet-light': '#424769',
+                        'carpet-gold': '#ffd700',
+                        'carpet-bronze': '#d2691e',
+                        'carpet-copper': '#8b4513',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        input, select, textarea { font-size: 16px !important; }
+        html { scroll-behavior: smooth; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .fade-in { animation: fadeIn 0.5s; }
+        .slide-in { animation: slideIn 0.5s; }
+        .search-highlight { background-color: rgba(255, 215, 0, 0.2) !important; border: 3px solid #ffd700 !important; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-carpet-dark to-[#16213e] text-gray-200 min-h-screen font-serif">
+    
+    <!-- Install Prompt -->
+    <div id="installPrompt" class="hidden mx-4 mt-4 bg-gradient-to-r from-green-700 to-green-600 text-white p-4 rounded-xl shadow-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex-1">
+                <p class="font-bold text-sm md:text-base">📱 Install Carpet Expert</p>
+                <p class="text-xs md:text-sm opacity-90">Works offline in bazaars with no signal</p>
+            </div>
+            <button onclick="installPWA()" class="bg-white text-green-700 px-4 py-2 rounded-lg font-bold text-sm ml-3 hover:bg-green-50">
+                Install
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-3 md:px-6 py-4 md:py-6">
+        
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-carpet-copper to-carpet-bronze p-4 md:p-8 rounded-xl md:rounded-2xl mb-4 md:mb-6 shadow-2xl text-center">
+            <h1 class="text-2xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-3 text-shadow">🧭 Carpet Fragment Expert</h1>
+            <p class="text-sm md:text-lg lg:text-xl opacity-90 italic">Armenia • Azerbaijan • Georgia • Albania • Bulgaria</p>
+            <div class="mt-3 md:mt-4 text-xs md:text-sm bg-black bg-opacity-20 inline-block px-4 py-2 rounded-lg">
+                <span class="inline-block mr-2">✓ Offline Ready</span>
+                <span class="inline-block">✓ Mobile Optimized</span>
+            </div>
+        </header>
+
+        <!-- Priority Finds Quick Reference -->
+        <div class="bg-gradient-to-r from-red-900 to-red-700 p-4 md:p-6 rounded-xl md:rounded-2xl mb-4 md:mb-6 border-4 border-carpet-gold shadow-xl">
+            <div class="flex items-center justify-between mb-3 md:mb-4 cursor-pointer" onclick="togglePriorityBuys()">
+                <h2 class="text-lg md:text-2xl font-bold text-carpet-gold">⚡ PRIORITY BUYS - Quick Recognition</h2>
+                <button id="priorityToggle" class="bg-black bg-opacity-30 hover:bg-opacity-50 px-3 md:px-4 py-2 rounded-lg font-bold text-sm md:text-base transition-all">
+                    ▼ Hide
+                </button>
+            </div>
+            <div id="priorityBuysContent" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                <div class="bg-black bg-opacity-30 p-3 md:p-4 rounded-lg">
+                    <div class="text-carpet-gold font-bold text-base md:text-lg mb-1">🐉 Armenian Dragon</div>
+                    <div class="text-xs md:text-sm mb-1">S-curved vishap motif</div>
+                    <div class="text-green-400 font-bold text-sm md:text-base">$8K-$80K+</div>
+                </div>
+                <div class="bg-black bg-opacity-30 p-3 md:p-4 rounded-lg">
+                    <div class="text-carpet-gold font-bold text-base md:text-lg mb-1">🕌 Shirvan Prayer</div>
+                    <div class="text-xs md:text-sm mb-1">Mihrab arch, tight weave</div>
+                    <div class="text-green-400 font-bold text-sm md:text-base">$5K-$40K</div>
+                </div>
+                <div class="bg-black bg-opacity-30 p-3 md:p-4 rounded-lg">
+                    <div class="text-carpet-gold font-bold text-base md:text-lg mb-1">🌹 Chiprovtsi</div>
+                    <div class="text-xs md:text-sm mb-1">Reversible UNESCO</div>
+                    <div class="text-green-400 font-bold text-sm md:text-base">$2K-$40K</div>
+                </div>
+                <div class="bg-black bg-opacity-30 p-3 md:p-4 rounded-lg">
+                    <div class="text-carpet-gold font-bold text-base md:text-lg mb-1">💎 Kuba/Chi-Chi</div>
+                    <div class="text-xs md:text-sm mb-1">150-250 KPSI fine weave</div>
+                    <div class="text-green-400 font-bold text-sm md:text-base">$10K-$60K</div>
+                </div>
+                <div class="bg-black bg-opacity-30 p-3 md:p-4 rounded-lg">
+                    <div class="text-carpet-gold font-bold text-base md:text-lg mb-1">📜 Inscriptions</div>
+                    <div class="text-xs md:text-sm mb-1">Armenian/Georgian dates</div>
+                    <div class="text-green-400 font-bold text-sm md:text-base">+40-60% value</div>
+                </div>
+                <div class="bg-black bg-opacity-30 p-3 md:p-4 rounded-lg">
+                    <div class="text-carpet-gold font-bold text-base md:text-lg mb-1">🧶 Wool+Natural</div>
+                    <div class="text-xs md:text-sm mb-1">Pre-1860s technology</div>
+                    <div class="text-green-400 font-bold text-sm md:text-base">$15K-$80K+</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex flex-wrap gap-2 mb-4 md:mb-6">
+            <button onclick="switchTab('quick-id')" class="tab-btn active px-3 md:px-6 py-2 md:py-3 bg-carpet-medium text-white rounded-lg text-sm md:text-base font-semibold transition-all hover:bg-carpet-light">
+                Quick ID
+            </button>
+            <button onclick="switchTab('search')" class="tab-btn px-3 md:px-6 py-2 md:py-3 bg-carpet-medium text-white rounded-lg text-sm md:text-base font-semibold transition-all hover:bg-carpet-light">
+                Search
+            </button>
+            <button onclick="switchTab('symbols')" class="tab-btn px-3 md:px-6 py-2 md:py-3 bg-carpet-medium text-white rounded-lg text-sm md:text-base font-semibold transition-all hover:bg-carpet-light">
+                Symbols
+            </button>
+            <button onclick="switchTab('regions')" class="tab-btn px-3 md:px-6 py-2 md:py-3 bg-carpet-medium text-white rounded-lg text-sm md:text-base font-semibold transition-all hover:bg-carpet-light">
+                Regions
+            </button>
+            <button onclick="switchTab('dating')" class="tab-btn px-3 md:px-6 py-2 md:py-3 bg-carpet-medium text-white rounded-lg text-sm md:text-base font-semibold transition-all hover:bg-carpet-light">
+                Dating
+            </button>
+        </div>
+
+        <!-- QUICK ID TAB -->
+        <div id="quick-id" class="tab-content active fade-in">
+            <div class="bg-gradient-to-br from-carpet-medium to-carpet-dark p-4 md:p-8 rounded-xl md:rounded-2xl border-4 border-carpet-bronze shadow-xl">
+                <h2 class="text-xl md:text-3xl font-bold text-carpet-gold mb-4 md:mb-6">⚡ Quick Fragment Identifier</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm md:text-base font-bold mb-2">Region:</label>
+                        <select id="region" class="w-full p-3 md:p-4 rounded-lg bg-carpet-dark border-2 border-carpet-light text-white text-sm md:text-base">
+                            <option value="">Select region...</option>
+                            <option value="armenia">Armenia</option>
+                            <option value="azerbaijan">Azerbaijan</option>
+                            <option value="georgia">Georgia</option>
+                            <option value="albania">Albania</option>
+                            <option value="bulgaria">Bulgaria</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm md:text-base font-bold mb-2">Primary Colors:</label>
+                        <select id="colors" class="w-full p-3 md:p-4 rounded-lg bg-carpet-dark border-2 border-carpet-light text-white text-sm md:text-base">
+                            <option value="">Select colors...</option>
+                            <option value="red-blue">Deep reds with indigo blues</option>
+                            <option value="rust-cream">Rust, cream, brown earth tones</option>
+                            <option value="vibrant">Vibrant reds, yellows, greens</option>
+                            <option value="muted">Muted pastels, natural dyes</option>
+                            <option value="black-white">Black, white, natural wool</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm md:text-base font-bold mb-2">Knot Density (KPSI):</label>
+                        <select id="knotDensity" class="w-full p-3 md:p-4 rounded-lg bg-carpet-dark border-2 border-carpet-light text-white text-sm md:text-base">
+                            <option value="">Select density...</option>
+                            <option value="low">Low (40-80 KPSI)</option>
+                            <option value="medium">Medium (80-150 KPSI)</option>
+                            <option value="high">High (150-300 KPSI)</option>
+                            <option value="very-high">Very High (300+ KPSI)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm md:text-base font-bold mb-2">Symbols/Motifs:</label>
+                        <textarea id="symbols" rows="3" class="w-full p-3 md:p-4 rounded-lg bg-carpet-dark border-2 border-carpet-light text-white text-sm md:text-base" placeholder="dragon, prayer niche, geometric medallions, etc."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm md:text-base font-bold mb-2">Weaving Technique:</label>
+                        <select id="technique" class="w-full p-3 md:p-4 rounded-lg bg-carpet-dark border-2 border-carpet-light text-white text-sm md:text-base">
+                            <option value="">Select technique...</option>
+                            <option value="pile">Knotted pile</option>
+                            <option value="kilim">Flat-weave kilim</option>
+                            <option value="soumak">Soumak (weft wrapping)</option>
+                            <option value="mixed">Mixed technique</option>
+                        </select>
+                    </div>
+
+                    <button onclick="identifyFragment()" class="w-full bg-gradient-to-r from-carpet-bronze to-carpet-copper text-white py-4 md:py-5 rounded-xl text-base md:text-lg font-bold hover:shadow-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                        🔍 Identify Fragment
+                    </button>
+
+                    <div id="resultBox" class="hidden mt-6 bg-carpet-light p-4 md:p-6 rounded-xl border-4 border-carpet-gold"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEARCH TAB -->
+        <div id="search" class="tab-content hidden">
+            <div class="bg-carpet-medium p-4 md:p-6 rounded-xl shadow-xl">
+                <h2 class="text-xl md:text-2xl font-bold text-carpet-gold mb-4">🔍 Global Search</h2>
+                
+                <input type="text" id="searchInput" 
+                       placeholder="Search: dragon, prayer, 1850-1920, chiprovtsi, natural dyes..." 
+                       class="w-full p-4 text-base rounded-lg bg-carpet-dark border-2 border-carpet-light text-white mb-3"
+                       onkeyup="performSearch()">
+                
+                <div class="text-xs md:text-sm text-gray-400 mb-4">
+                    Examples: "dragon" • "prayer rug" • "chiprovtsi" • "pre-1900" • "shirvan" • "high value"
+                </div>
+
+                <!-- Search Results Navigation -->
+                <div id="searchResultsNav" class="hidden sticky top-0 z-50 bg-gradient-to-r from-carpet-copper to-carpet-bronze p-3 md:p-4 rounded-lg mb-4 shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span id="searchResultCount" class="text-sm md:text-base font-bold">Found 0 results</span>
+                        <div class="flex gap-2">
+                            <button onclick="previousResult()" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 md:px-4 py-1 md:py-2 rounded text-xs md:text-sm font-bold">
+                                ← Prev
+                            </button>
+                            <span id="currentResultNum" class="px-3 md:px-4 py-1 md:py-2 bg-black bg-opacity-20 rounded text-xs md:text-sm font-bold">
+                                1 of 1
+                            </span>
+                            <button onclick="nextResult()" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 md:px-4 py-1 md:py-2 rounded text-xs md:text-sm font-bold">
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+                    <div id="currentResultInfo" class="text-xs md:text-sm opacity-90"></div>
+                </div>
+
+                <!-- Search results container -->
+                <div id="searchResults" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- SYMBOLS TAB -->
+        <div id="symbols" class="tab-content hidden">
+            <div class="bg-carpet-medium p-4 md:p-6 rounded-xl shadow-xl">
+                <h2 class="text-xl md:text-2xl font-bold text-carpet-gold mb-4">Symbol Encyclopedia</h2>
+                
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button onclick="filterSymbols('all')" class="filter-btn active px-3 md:px-4 py-2 bg-carpet-light text-white rounded-lg text-xs md:text-sm">All</button>
+                    <button onclick="filterSymbols('very-high')" class="filter-btn px-3 md:px-4 py-2 bg-carpet-light text-white rounded-lg text-xs md:text-sm">Very High $$$</button>
+                    <button onclick="filterSymbols('high')" class="filter-btn px-3 md:px-4 py-2 bg-carpet-light text-white rounded-lg text-xs md:text-sm">High $$</button>
+                </div>
+
+                <div id="symbolsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                    <!-- Symbols will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- REGIONS TAB -->
+        <div id="regions" class="tab-content hidden">
+            <div class="space-y-4">
+                <div class="bg-carpet-medium p-4 md:p-6 rounded-xl">
+                    <h2 class="text-xl md:text-2xl font-bold text-carpet-gold mb-4">Regional Guides</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        <button onclick="showRegion('armenia')" class="bg-carpet-light hover:bg-carpet-copper p-4 rounded-lg text-left transition-all">
+                            <div class="font-bold text-base md:text-lg mb-1">🇦🇲 Armenia</div>
+                            <div class="text-xs md:text-sm opacity-80">Karabakh, Kazak, Dragons</div>
+                        </button>
+                        <button onclick="showRegion('azerbaijan')" class="bg-carpet-light hover:bg-carpet-copper p-4 rounded-lg text-left transition-all">
+                            <div class="font-bold text-base md:text-lg mb-1">🇦🇿 Azerbaijan</div>
+                            <div class="text-xs md:text-sm opacity-80">Shirvan, Kuba, Prayer Rugs</div>
+                        </button>
+                        <button onclick="showRegion('georgia')" class="bg-carpet-light hover:bg-carpet-copper p-4 rounded-lg text-left transition-all">
+                            <div class="font-bold text-base md:text-lg mb-1">🇬🇪 Georgia</div>
+                            <div class="text-xs md:text-sm opacity-80">Karachov, Undervalued</div>
+                        </button>
+                        <button onclick="showRegion('albania')" class="bg-carpet-light hover:bg-carpet-copper p-4 rounded-lg text-left transition-all">
+                            <div class="font-bold text-base md:text-lg mb-1">🇦🇱 Albania</div>
+                            <div class="text-xs md:text-sm opacity-80">Kilims, Emerging Market</div>
+                        </button>
+                        <button onclick="showRegion('bulgaria')" class="bg-carpet-light hover:bg-carpet-copper p-4 rounded-lg text-left transition-all">
+                            <div class="font-bold text-base md:text-lg mb-1">🇧🇬 Bulgaria</div>
+                            <div class="text-xs md:text-sm opacity-80">Chiprovtsi UNESCO</div>
+                        </button>
+                    </div>
+                </div>
+                <div id="regionDetail" class="bg-carpet-medium p-4 md:p-6 rounded-xl hidden"></div>
+            </div>
+        </div>
+
+        <!-- DATING TAB -->
+        <div id="dating" class="tab-content hidden">
+            <div class="bg-carpet-medium p-4 md:p-6 rounded-xl">
+                <h2 class="text-xl md:text-2xl font-bold text-carpet-gold mb-4">Authentication Tools</h2>
+                <div class="space-y-4">
+                    <button onclick="showAuthTool('checklist')" class="w-full bg-carpet-light hover:bg-carpet-copper p-4 rounded-lg text-left transition-all">
+                        <div class="font-bold text-base md:text-lg">🔬 Authentication Checklist</div>
+                        <div class="text-xs md:text-sm opacity-80">Point-based scoring system</div>
+                    </button>
+                    <button onclick="showAuthTool('age')" class="w-full bg-carpet-light hover:bg-carpet-copper p-4 rounded-lg text-left transition-all">
+                        <div class="font-bold text-base md:text-lg">📅 Age Estimator</div>
+                        <div class="text-xs md:text-sm opacity-80">Date by dyes, foundation, design</div>
+                    </button>
+                    <button onclick="showAuthTool('redflags')" class="w-full bg-carpet-light hover:bg-carpet-copper p-4 rounded-lg text-left transition-all">
+                        <div class="font-bold text-base md:text-lg">⚠️ Red Flags Guide</div>
+                        <div class="text-xs md:text-sm opacity-80">Walk away indicators</div>
+                    </button>
+                </div>
+                <div id="authToolContent" class="mt-4"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // PWA Installation
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.remove('hidden');
+        });
+
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installPrompt').classList.add('hidden');
+            }
+        }
+
+        // Toggle Priority Buys Section
+        function togglePriorityBuys() {
+            const content = document.getElementById('priorityBuysContent');
+            const toggle = document.getElementById('priorityToggle');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'grid';
+                toggle.textContent = '▼ Hide';
+            } else {
+                content.style.display = 'none';
+                toggle.textContent = '▶ Show';
+            }
+        }
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            const sw = `
+                const CACHE_NAME = 'carpet-expert-v1';
+                self.addEventListener('install', (event) => {
+                    event.waitUntil(caches.open(CACHE_NAME));
+                });
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                        caches.match(event.request).then(response => response || fetch(event.request))
+                    );
+                });
+            `;
+            const blob = new Blob([sw], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl);
+        }
+
+        // Manifest Generation
+        const manifest = {
+            name: "Caucasus Carpet Fragment Expert",
+            short_name: "Carpet Expert",
+            description: "Field guide for identifying valuable Caucasian carpets",
+            start_url: "./",
+            display: "standalone",
+            background_color: "#1a1a2e",
+            theme_color: "#8b4513",
+            orientation: "portrait",
+            icons: [
+                {
+                    src: "icon.svg",
+                    sizes: "512x512",
+                    type: "image/svg+xml",
+                    purpose: "any maskable"
+                },
+                {
+                    src: "icon.svg",
+                    sizes: "192x192",
+                    type: "image/svg+xml"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.getElementById('manifest-placeholder').setAttribute('href', manifestURL);
+
+        // Tab Management
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active', 'bg-gradient-to-r', 'from-carpet-bronze', 'to-carpet-copper'));
+            
+            document.getElementById(tabName).classList.remove('hidden');
+            event.target.classList.add('active', 'bg-gradient-to-r', 'from-carpet-bronze', 'to-carpet-copper');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Search functionality
+        let searchResults = [];
+        let currentResultIndex = 0;
+
+        function performSearch() {
+            const term = document.getElementById('searchInput').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('searchResults');
+            const navContainer = document.getElementById('searchResultsNav');
+            
+            // Clear previous results
+            searchResults = [];
+            currentResultIndex = 0;
+            resultsContainer.innerHTML = '';
+            
+            if (!term) {
+                navContainer.classList.add('hidden');
+                return;
+            }
+
+            // Search data
+            const searchData = getSearchableContent();
+            searchResults = searchData.filter(item => 
+                item.title.toLowerCase().includes(term) ||
+                item.content.toLowerCase().includes(term) ||
+                (item.keywords && item.keywords.toLowerCase().includes(term))
+            );
+
+            if (searchResults.length > 0) {
+                navContainer.classList.remove('hidden');
+                updateSearchNav();
+                displayCurrentResult();
+            } else {
+                navContainer.classList.add('hidden');
+                resultsContainer.innerHTML = `
+                    <div class="bg-red-900 bg-opacity-50 p-4 rounded-lg text-center">
+                        <p class="font-bold mb-2">No results found for "${term}"</p>
+                        <p class="text-sm opacity-80">Try: dragon, prayer, chiprovtsi, 1850-1920, natural dyes</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateSearchNav() {
+            document.getElementById('searchResultCount').textContent = `Found ${searchResults.length} result${searchResults.length !== 1 ? 's' : ''}`;
+            document.getElementById('currentResultNum').textContent = `${currentResultIndex + 1} of ${searchResults.length}`;
+            
+            const currentItem = searchResults[currentResultIndex];
+            document.getElementById('currentResultInfo').textContent = `${currentItem.category} → ${currentItem.title}`;
+        }
+
+        function displayCurrentResult() {
+            const resultsContainer = document.getElementById('searchResults');
+            const item = searchResults[currentResultIndex];
+            
+            resultsContainer.innerHTML = `
+                <div class="bg-carpet-light p-4 md:p-6 rounded-xl border-4 border-carpet-gold slide-in">
+                    <div class="text-carpet-gold text-xs md:text-sm font-bold mb-2">${item.category}</div>
+                    <h3 class="text-lg md:text-2xl font-bold text-carpet-gold mb-3">${item.title}</h3>
+                    <div class="prose prose-invert max-w-none text-sm md:text-base">${item.content}</div>
+                    ${item.value ? `<div class="mt-4 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black px-4 py-2 rounded-lg inline-block font-bold text-sm md:text-base">${item.value}</div>` : ''}
+                </div>
+            `;
+            
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function nextResult() {
+            if (currentResultIndex < searchResults.length - 1) {
+                currentResultIndex++;
+                updateSearchNav();
+                displayCurrentResult();
+            }
+        }
+
+        function previousResult() {
+            if (currentResultIndex > 0) {
+                currentResultIndex--;
+                updateSearchNav();
+                displayCurrentResult();
+            }
+        }
+
+        // Fragment Identification
+        function identifyFragment() {
+            const region = document.getElementById('region').value;
+            const colors = document.getElementById('colors').value;
+            const knotDensity = document.getElementById('knotDensity').value;
+            const symbols = document.getElementById('symbols').value.toLowerCase();
+            const technique = document.getElementById('technique').value;
+            
+            const resultBox = document.getElementById('resultBox');
+            
+            if (!region || !colors || !knotDensity || !technique) {
+                resultBox.innerHTML = '<p class="text-red-400 font-bold">Please fill in all required fields.</p>';
+                resultBox.classList.remove('hidden');
+                return;
+            }
+            
+            let confidence = 0;
+            let valueEstimate = 'Unable to determine';
+            let recommendation = '';
+            
+            // Armenian analysis
+            if (region === 'armenia') {
+                if (symbols.includes('dragon') || symbols.includes('vishap')) {
+                    confidence += 35;
+                    valueEstimate = 'Very High ($8,000-$50,000+)';
+                    recommendation = '🎯 PRIORITY BUY - Armenian dragon motifs are museum-quality';
+                }
+                if (symbols.includes('cross')) confidence += 25;
+                if (colors === 'red-blue' && knotDensity === 'medium') confidence += 20;
+            }
+            
+            // Azerbaijan analysis
+            if (region === 'azerbaijan') {
+                if (symbols.includes('prayer') || symbols.includes('mihrab')) {
+                    confidence += 40;
+                    valueEstimate = 'Very High ($8,000-$40,000+)';
+                    recommendation = '🎯 PRIORITY BUY - Azerbaijani prayer rugs are highly collectible';
+                }
+                if (knotDensity === 'very-high' || knotDensity === 'high') {
+                    confidence += 25;
+                    valueEstimate = 'Very High ($10,000-$60,000)';
+                }
+            }
+            
+            // Bulgaria analysis
+            if (region === 'bulgaria' && technique === 'kilim') {
+                if (symbols.includes('rose') || symbols.includes('chiprovtsi')) {
+                    confidence += 45;
+                    valueEstimate = 'Very High ($3,000-$40,000)';
+                    recommendation = '🎯 PRIORITY BUY - Check if reversible (identical both sides)!';
+                }
+            }
+            
+            resultBox.innerHTML = `
+                <h3 class="text-xl md:text-2xl font-bold text-carpet-gold mb-4">Analysis Results</h3>
+                <div class="space-y-3">
+                    <div class="bg-carpet-dark p-4 rounded-lg">
+                        <div class="text-sm md:text-base mb-1">Confidence Level:</div>
+                        <div class="text-xl md:text-3xl font-bold text-carpet-gold">${Math.min(confidence, 95)}%</div>
+                    </div>
+                    <div class="bg-carpet-dark p-4 rounded-lg">
+                        <div class="text-sm md:text-base mb-1">Estimated Value:</div>
+                        <div class="text-lg md:text-2xl font-bold text-green-400">${valueEstimate}</div>
+                    </div>
+                    ${recommendation ? `<div class="bg-green-700 bg-opacity-50 p-4 rounded-lg border-2 border-green-500"><div class="font-bold text-base md:text-lg">${recommendation}</div></div>` : ''}
+                    <div class="bg-carpet-dark p-4 rounded-lg">
+                        <div class="font-bold mb-2 text-sm md:text-base">Next Steps:</div>
+                        <ul class="list-disc list-inside space-y-1 text-xs md:text-sm">
+                            <li>Photograph front and back in natural light</li>
+                            <li>Count knots per square inch</li>
+                            <li>Check for woven dates/inscriptions</li>
+                            <li>Smell test for synthetic materials</li>
+                            <li>Document seller provenance</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            resultBox.classList.remove('hidden');
+            resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Symbol filtering
+        function filterSymbols(level) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-carpet-bronze');
+            });
+            event.target.classList.add('active', 'bg-carpet-bronze');
+            
+            renderSymbols(level);
+        }
+
+        function renderSymbols(filter = 'all') {
+            const symbols = getSymbolData();
+            const filtered = filter === 'all' ? symbols : symbols.filter(s => s.value === filter);
+            
+            const grid = document.getElementById('symbolsGrid');
+            grid.innerHTML = filtered.map(s => `
+                <div class="bg-carpet-light p-4 rounded-lg border-l-4 border-carpet-bronze">
+                    <div class="text-lg md:text-xl font-bold mb-2">${s.icon} ${s.name}</div>
+                    <div class="text-xs md:text-sm mb-2"><strong>Meaning:</strong> ${s.meaning}</div>
+                    <div class="text-xs md:text-sm mb-2">${s.info}</div>
+                    <div class="bg-gradient-to-r from-yellow-600 to-yellow-500 text-black px-3 py-1 rounded inline-block text-xs md:text-sm font-bold mt-2">
+                        ${s.valueLabel}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Region details
+        function showRegion(region) {
+            const detail = document.getElementById('regionDetail');
+            const data = getRegionData(region);
+            
+            detail.innerHTML = `
+                <h3 class="text-xl md:text-2xl font-bold text-carpet-gold mb-4">${data.name}</h3>
+                <div class="space-y-4 text-sm md:text-base">
+                    <div><strong>Peak Period:</strong> ${data.period}</div>
+                    <div><strong>Key Types:</strong> ${data.types}</div>
+                    <div><strong>Value Range:</strong> ${data.value}</div>
+                    <div class="bg-carpet-dark p-4 rounded-lg">
+                        <div class="font-bold mb-2">What to Look For:</div>
+                        <ul class="list-disc list-inside space-y-1">
+                            ${data.lookFor.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ${data.tip ? `<div class="bg-green-700 bg-opacity-30 p-4 rounded-lg border-2 border-green-500"><strong>💡 Field Tip:</strong> ${data.tip}</div>` : ''}
+                </div>
+            `;
+            
+            detail.classList.remove('hidden');
+            detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Authentication tools
+        function showAuthTool(tool) {
+            const content = document.getElementById('authToolContent');
+            
+            if (tool === 'checklist') {
+                content.innerHTML = `
+                    <div class="bg-carpet-dark p-4 md:p-6 rounded-xl mt-4">
+                        <h3 class="text-lg md:text-xl font-bold mb-4">Authentication Checklist</h3>
+                        <div class="space-y-3">
+                            <label class="flex items-start gap-3 bg-carpet-light p-3 rounded-lg cursor-pointer hover:bg-opacity-80">
+                                <input type="checkbox" class="mt-1" data-points="10">
+                                <span class="text-sm md:text-base">Musty, earthy wool smell (not chemical)</span>
+                            </label>
+                            <label class="flex items-start gap-3 bg-carpet-light p-3 rounded-lg cursor-pointer hover:bg-opacity-80">
+                                <input type="checkbox" class="mt-1" data-points="15">
+                                <span class="text-sm md:text-base">Horizontal color banding (abrash) visible</span>
+                            </label>
+                            <label class="flex items-start gap-3 bg-carpet-light p-3 rounded-lg cursor-pointer hover:bg-opacity-80">
+                                <input type="checkbox" class="mt-1" data-points="15">
+                                <span class="text-sm md:text-base">Pattern clearly visible on reverse side</span>
+                            </label>
+                            <label class="flex items-start gap-3 bg-carpet-light p-3 rounded-lg cursor-pointer hover:bg-opacity-80">
+                                <input type="checkbox" class="mt-1" data-points="20">
+                                <span class="text-sm md:text-base">Irregular knot sizes (hand-tied)</span>
+                            </label>
+                            <label class="flex items-start gap-3 bg-carpet-light p-3 rounded-lg cursor-pointer hover:bg-opacity-80">
+                                <input type="checkbox" class="mt-1" data-points="25">
+                                <span class="text-sm md:text-base">Wool warp and weft (pre-1900)</span>
+                            </label>
+                            <label class="flex items-start gap-3 bg-red-900 bg-opacity-50 p-3 rounded-lg cursor-pointer hover:bg-opacity-60">
+                                <input type="checkbox" class="mt-1" data-points="-30">
+                                <span class="text-sm md:text-base">❌ Bright neon colors (synthetic dyes)</span>
+                            </label>
+                            <label class="flex items-start gap-3 bg-red-900 bg-opacity-50 p-3 rounded-lg cursor-pointer hover:bg-opacity-60">
+                                <input type="checkbox" class="mt-1" data-points="-25">
+                                <span class="text-sm md:text-base">❌ Perfectly uniform knots (machine-made)</span>
+                            </label>
+                        </div>
+                        <button onclick="calculateAuth()" class="w-full mt-4 bg-gradient-to-r from-carpet-bronze to-carpet-copper text-white py-3 md:py-4 rounded-lg font-bold text-sm md:text-base">
+                            Calculate Score
+                        </button>
+                        <div id="authScore" class="mt-4"></div>
+                    </div>
+                `;
+            } else if (tool === 'age') {
+                content.innerHTML = `
+                    <div class="bg-carpet-dark p-4 md:p-6 rounded-xl mt-4">
+                        <h3 class="text-lg md:text-xl font-bold mb-4">Age Estimation</h3>
+                        <div class="space-y-4 text-sm md:text-base">
+                            <div class="bg-carpet-light p-4 rounded-lg">
+                                <div class="font-bold mb-2">🎨 By Dye Technology:</div>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>Pre-1860: ALL natural dyes</li>
+                                    <li>1860-1900: Mix natural + synthetic</li>
+                                    <li>1900-1920: Predominantly synthetic</li>
+                                    <li>Post-1920: All synthetic (low value)</li>
+                                    <li>Post-1980: Natural dye revival (reproductions!)</li>
+                                </ul>
+                            </div>
+                            <div class="bg-carpet-light p-4 rounded-lg">
+                                <div class="font-bold mb-2">🧵 By Foundation:</div>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>Wool warp + weft = Pre-1900</li>
+                                    <li>Cotton warp, wool weft = 1900-1930</li>
+                                    <li>Cotton warp + weft = Post-1960</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (tool === 'redflags') {
+                content.innerHTML = `
+                    <div class="bg-carpet-dark p-4 md:p-6 rounded-xl mt-4">
+                        <h3 class="text-lg md:text-xl font-bold mb-4 text-red-400">🚫 Red Flags - Walk Away</h3>
+                        <div class="space-y-2 text-sm md:text-base">
+                            <div class="bg-red-900 bg-opacity-50 p-3 rounded-lg">❌ Chemical smell when sniffing</div>
+                            <div class="bg-red-900 bg-opacity-50 p-3 rounded-lg">❌ Neon colors (orange, purple, lime)</div>
+                            <div class="bg-red-900 bg-opacity-50 p-3 rounded-lg">❌ Machine-perfect knots</div>
+                            <div class="bg-red-900 bg-opacity-50 p-3 rounded-lg">❌ New fringe on worn pile</div>
+                            <div class="bg-red-900 bg-opacity-50 p-3 rounded-lg">❌ Pakistan/Afghanistan label</div>
+                            <div class="bg-red-900 bg-opacity-50 p-3 rounded-lg">❌ Too perfect for claimed age</div>
+                            <div class="bg-red-900 bg-opacity-50 p-3 rounded-lg">❌ Price suspiciously low</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function calculateAuth() {
+            const checkboxes = document.querySelectorAll('#authToolContent input[type="checkbox"]:checked');
+            let score = 0;
+            checkboxes.forEach(cb => score += parseInt(cb.getAttribute('data-points')));
+            
+            const normalized = Math.max(0, Math.min(100, ((score + 50) / 135) * 100));
+            const scoreDiv = document.getElementById('authScore');
+            
+            let verdict = '';
+            let color = '';
+            
+            if (normalized >= 75) {
+                verdict = '✅ STRONG AUTHENTICATION - Proceed with confidence';
+                color = 'bg-green-700';
+            } else if (normalized >= 50) {
+                verdict = '⚠️ MODERATE - Investigate further before buying';
+                color = 'bg-yellow-700';
+            } else {
+                verdict = '❌ LOW CONFIDENCE - Walk away';
+                color = 'bg-red-700';
+            }
+            
+            scoreDiv.innerHTML = `
+                <div class="${color} bg-opacity-70 p-4 rounded-lg border-2 border-current">
+                    <div class="text-2xl md:text-4xl font-bold mb-2">${normalized.toFixed(0)}%</div>
+                    <div class="font-bold text-sm md:text-base">${verdict}</div>
+                </div>
+            `;
+        }
+
+        // Data functions
+        function getSearchableContent() {
+            return [
+                {
+                    category: "Armenia",
+                    title: "Armenian Dragon (Vishap)",
+                    content: "S-curved dragon motifs are distinctly Armenian, especially in Karabakh pieces. Look for hooked tongues and scale patterns. These are museum-quality finds.",
+                    value: "$8,000-$80,000+",
+                    keywords: "dragon vishap armenia karabakh s-curve scales high-value"
+                },
+                {
+                    category: "Azerbaijan",
+                    title: "Shirvan Prayer Rugs",
+                    content: "Prayer rugs (namazlyk) with distinctive mihrab arch. Tightly woven (100-180 KPSI) with dark blue or black fields. Often feature lamp or hands motifs.",
+                    value: "$5,000-$40,000",
+                    keywords: "shirvan prayer mihrab azerbaijani niche arch high-value"
+                },
+                {
+                    category: "Bulgaria",
+                    title: "Chiprovtsi Reversible Kilims",
+                    content: "UNESCO heritage textiles. CRITICAL TEST: Pattern must be identical on both sides. Diagonal ribbing on surface from oblique weaving. Natural dyes only.",
+                    value: "$2,000-$40,000",
+                    keywords: "chiprovtsi bulgaria reversible unesco kilim rose very-high-value"
+                },
+                {
+                    category: "Azerbaijan",
+                    title: "Kuba Fine Weaving",
+                    content: "Finest weaving in Caucasus at 150-250 KPSI. Chi-Chi subtype with diagonal lattice is premium. Museum-quality pieces.",
+                    value: "$10,000-$60,000",
+                    keywords: "kuba chi-chi azerbaijan fine-weave very-high-knot museum"
+                },
+                {
+                    category: "Armenia",
+                    title: "Karabakh Carpets",
+                    content: "Large-scale floral motifs, especially roses and nightingales. Deep indigo backgrounds with rich reds. Famous for Eagle Kazak and Cloudband designs.",
+                    value: "$15,000-$80,000+",
+                    keywords: "karabakh armenia eagle kazak cloudband roses high-value"
+                },
+                {
+                    category: "Dating",
+                    title: "Pre-1900 Indicators",
+                    content: "Wool warp AND weft threads, natural dyes only (madder, indigo, walnut), irregular knots, abrash color banding. Chemical smell = walk away.",
+                    value: "Authentication Key",
+                    keywords: "pre-1900 19th-century natural-dyes wool authentication dating"
+                },
+                {
+                    category: "Albania",
+                    title: "Albanian Kilims",
+                    content: "Flat-weave with bold geometric designs. Traditionally made for dowries. Currently undervalued - emerging market opportunity.",
+                    value: "$300-$10,000",
+                    keywords: "albania kilim flat-weave emerging undervalued geometric"
+                },
+                {
+                    category: "Symbols",
+                    title: "Boteh (Paisley)",
+                    content: "Teardrop flame motif from Zoroastrianism. Rows of boteh indicate Azerbaijani origin, particularly Shirvan or Baku region.",
+                    value: "Medium Value",
+                    keywords: "boteh buta paisley azerbaijan shirvan flame"
+                }
+            ];
+        }
+
+        function getSymbolData() {
+            return [
+                { icon: "🐉", name: "Dragon (Vishap)", meaning: "Power, protection, water guardian", info: "S-curve Armenian dragons are museum-quality", value: "very-high", valueLabel: "VERY HIGH VALUE" },
+                { icon: "🕌", name: "Prayer Niche (Mihrab)", meaning: "Direction to Mecca", info: "Prayer rugs always premium items", value: "very-high", valueLabel: "VERY HIGH VALUE" },
+                { icon: "✝️", name: "Cross Patterns", meaning: "Christian faith, sacred center", info: "High value in Armenian/Georgian/Bulgarian pieces", value: "high", valueLabel: "HIGH VALUE" },
+                { icon: "🔷", name: "Boteh (Paisley)", meaning: "Zoroastrian flame, life force", info: "Common but desirable in Azerbaijani work", value: "medium", valueLabel: "MEDIUM VALUE" },
+                { icon: "⭐", name: "Eight-Pointed Star", meaning: "Celestial guidance, infinity", info: "High when combined with geometric borders", value: "high", valueLabel: "HIGH VALUE" },
+                { icon: "🌳", name: "Tree of Life", meaning: "Immortality, earth-heaven connection", info: "High value especially with birds/animals", value: "high", valueLabel: "HIGH VALUE" },
+                { icon: "🌹", name: "Chiprovtsi Rose", meaning: "Beauty, Bulgarian heritage", info: "Unique to UNESCO Chiprovtsi carpets", value: "very-high", valueLabel: "VERY HIGH (Bulgaria)" },
+                { icon: "🐺", name: "Running Dog Border", meaning: "Protection, loyalty", info: "Common in quality Shirvan pieces", value: "medium", valueLabel: "MEDIUM VALUE" }
+            ];
+        }
+
+        function getRegionData(region) {
+            const data = {
+                armenia: {
+                    name: "🇦🇲 Armenian Carpets",
+                    period: "1700-1920 (Golden Age)",
+                    types: "Karabakh, Kazak, Erivan",
+                    value: "$4,000-$80,000+",
+                    lookFor: [
+                        "Dragon (vishap) motifs - S-curved forms",
+                        "Armenian cross (khachkar) patterns",
+                        "Cloudband designs (pre-1850 Karabakh)",
+                        "Woven Armenian inscriptions or dates",
+                        "Deep indigo + rich madder red colors",
+                        "Thick pile with wool warps"
+                    ],
+                    tip: "Armenian carpets often have distinctive 'hand' - wool feels coarser than Persian. If you see Armenian letters woven anywhere, photograph immediately. These are rare and valuable."
+                },
+                azerbaijan: {
+                    name: "🇦🇿 Azerbaijani Carpets",
+                    period: "1800-1930 (Peak Quality)",
+                    types: "Shirvan, Kuba, Baku, Ganja",
+                    value: "$5,000-$60,000+",
+                    lookFor: [
+                        "Prayer rugs with mihrab arch - PRIORITY",
+                        "Very fine weaving (150-250 KPSI) = Kuba",
+                        "Boteh (paisley) patterns in rows",
+                        "Running dog borders",
+                        "Dark blue/black grounds with ivory",
+                        "Chi-Chi diagonal lattice (premium)"
+                    ],
+                    tip: "Shirvan prayer rugs under $2,000 in good condition = buy immediately. Turn carpet over - pattern should be clearly visible on reverse. If fuzzy/unclear, likely reproduction."
+                },
+                georgia: {
+                    name: "🇬🇪 Georgian Carpets",
+                    period: "1850-1920",
+                    types: "Karachov, Tbilisi, Kilims",
+                    value: "$1,000-$20,000",
+                    lookFor: [
+                        "Christian cross motifs + Caucasian geometric",
+                        "Grape vine borders (winemaking tradition)",
+                        "Georgian script inscriptions",
+                        "Bold stripes in kilims",
+                        "Cruciform medallions"
+                    ],
+                    tip: "Georgian carpets significantly UNDERVALUED vs Armenian/Azerbaijani. Christian symbolism authenticates Georgian origin. Focus on pieces locals don't recognize value of."
+                },
+                albania: {
+                    name: "🇦🇱 Albanian Textiles",
+                    period: "1850-1970",
+                    types: "Kilims (Qilim), Çerga, rare Gjilim pile",
+                    value: "$300-$15,000",
+                    lookFor: [
+                        "Large diamond medallions",
+                        "Zigzag patterns",
+                        "Slit-weave technique",
+                        "Dark wool warps (brown/grey)",
+                        "Albanian pile rugs = RARE, high value",
+                        "Distinctive thick cord selvedge"
+                    ],
+                    tip: "EMERGING MARKET - prices rising 20-30% annually. Pre-1900 kilims can be purchased for $500-$1,500 that sell for $3,000-$8,000 in Western markets. Focus on documented village provenance."
+                },
+                bulgaria: {
+                    name: "🇧🇬 Bulgarian Carpets",
+                    period: "1850-1930 (Peak Quality)",
+                    types: "Chiprovtsi UNESCO, Kotel, Rhodope",
+                    value: "$800-$40,000",
+                    lookFor: [
+                        "REVERSIBILITY - pattern identical both sides (Chiprovtsi)",
+                        "Diagonal ribs on surface texture",
+                        "Chiprovtsi rose motif",
+                        "100% wool (no cotton in authentic old pieces)",
+                        "Natural dyes with rich vibrant colors",
+                        "Christian crosses + Ottoman patterns"
+                    ],
+                    tip: "Chiprovtsi carpets are among most UNDERVALUED European textiles. UNESCO-recognized yet sell 50-70% less than Turkish equivalents. Pre-1920 Chiprovtsi in excellent condition for $3K-$8K would sell $15K-$30K in London/NYC."
+                }
+            };
+            return data[region];
+        }
+
+        // Initialize
+        window.onload = () => {
+            renderSymbols();
+        };
+    </script>
+</body>
+</html>
