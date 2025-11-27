@@ -448,60 +448,62 @@
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, 512, 512);
         
-        // Carpet base
-        const carpetGrad = ctx.createLinearGradient(0, 120, 0, 460);
+        // Larger carpet base (centered and bigger)
+        const carpetGrad = ctx.createLinearGradient(0, 60, 0, 452);
         carpetGrad.addColorStop(0, '#8b0000');
         carpetGrad.addColorStop(0.5, '#dc143c');
         carpetGrad.addColorStop(1, '#8b0000');
         ctx.fillStyle = carpetGrad;
-        ctx.fillRect(100, 120, 312, 340);
+        ctx.fillRect(56, 60, 400, 392);
         
-        // Gold borders
+        // Gold borders (thicker and more prominent)
         ctx.strokeStyle = '#ffd700';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(115, 135, 282, 310);
-        ctx.lineWidth = 2;
-        ctx.strokeRect(125, 145, 262, 290);
+        ctx.lineWidth = 6;
+        ctx.strokeRect(70, 74, 372, 364);
+        ctx.lineWidth = 3;
+        ctx.strokeRect(82, 86, 348, 340);
         
-        // Central medallion
+        // Central medallion (larger)
         ctx.fillStyle = 'rgba(139, 69, 19, 0.7)';
         ctx.beginPath();
-        ctx.arc(256, 290, 60, 0, Math.PI * 2);
+        ctx.arc(256, 256, 80, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
         ctx.beginPath();
-        ctx.arc(256, 290, 45, 0, Math.PI * 2);
+        ctx.arc(256, 256, 60, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#8b0000';
         ctx.beginPath();
-        ctx.arc(256, 290, 30, 0, Math.PI * 2);
+        ctx.arc(256, 256, 40, 0, Math.PI * 2);
         ctx.fill();
         
-        // Corner decorations
-        ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
-        [[160, 180], [352, 180], [160, 400], [352, 400]].forEach(([x, y]) => {
+        // Corner decorations (bigger)
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.7)';
+        [[130, 134], [382, 134], [130, 378], [382, 378]].forEach(([x, y]) => {
             ctx.beginPath();
-            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.arc(x, y, 28, 0, Math.PI * 2);
             ctx.fill();
         });
         
-        // Fringe
-        ctx.strokeStyle = '#d2691e';
-        ctx.lineWidth = 3;
-        ctx.globalAlpha = 0.8;
-        for(let x = 120; x < 392; x += 20) {
+        // Secondary corner accent
+        ctx.fillStyle = 'rgba(139, 69, 19, 0.5)';
+        [[130, 134], [382, 134], [130, 378], [382, 378]].forEach(([x, y]) => {
             ctx.beginPath();
-            ctx.moveTo(x, 460);
-            ctx.lineTo(x, x % 40 === 0 ? 485 : 480);
+            ctx.arc(x, y, 18, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        
+        // Fringe at bottom (more detailed)
+        ctx.strokeStyle = '#d2691e';
+        ctx.lineWidth = 4;
+        ctx.globalAlpha = 0.9;
+        for(let x = 76; x < 436; x += 20) {
+            ctx.beginPath();
+            ctx.moveTo(x, 452);
+            ctx.lineTo(x, x % 40 === 0 ? 490 : 485);
             ctx.stroke();
         }
         ctx.globalAlpha = 1;
-        
-        // Compass emoji
-        ctx.font = 'bold 80px Arial, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('🧭', 256, 70);
         
         const iconDataUrl = canvas.toDataURL('image/png');
         
@@ -641,63 +643,272 @@
                 return;
             }
             
-            let confidence = 0;
-            let valueEstimate = 'Unable to determine';
+            let confidence = 20; // Start with base confidence
+            let valueEstimate = 'Low-Medium ($50-$300)';
             let recommendation = '';
+            let details = [];
             
-            // Armenian analysis
+            // REGION-SPECIFIC ANALYSIS
+            
+            // ===== ARMENIA =====
             if (region === 'armenia') {
+                confidence += 10; // Base for selecting Armenia
+                
+                // Dragon/Vishap - HIGHEST VALUE
                 if (symbols.includes('dragon') || symbols.includes('vishap')) {
-                    confidence += 35;
-                    valueEstimate = 'Very High ($8,000-$50,000+)';
-                    recommendation = '🎯 PRIORITY BUY - Armenian dragon motifs are museum-quality';
-                }
-                if (symbols.includes('cross')) confidence += 25;
-                if (colors === 'red-blue' && knotDensity === 'medium') confidence += 20;
-            }
-            
-            // Azerbaijan analysis
-            if (region === 'azerbaijan') {
-                if (symbols.includes('prayer') || symbols.includes('mihrab')) {
                     confidence += 40;
-                    valueEstimate = 'Very High ($8,000-$40,000+)';
-                    recommendation = '🎯 PRIORITY BUY - Azerbaijani prayer rugs are highly collectible';
+                    valueEstimate = 'Very High ($800-$5,000+ per fragment)';
+                    recommendation = '🎯 PRIORITY BUY - Armenian dragon fragments are museum-quality. Even small pieces highly valuable.';
+                    details.push('Dragon/vishap detected - Armenian specialty');
                 }
-                if (knotDensity === 'very-high' || knotDensity === 'high') {
+                
+                // Cross patterns
+                if (symbols.includes('cross') || symbols.includes('khachkar')) {
                     confidence += 25;
-                    valueEstimate = 'Very High ($10,000-$60,000)';
+                    details.push('Cross/khachkar - Armenian Christian indicator');
+                    if (!recommendation) valueEstimate = 'High ($300-$2,000)';
+                }
+                
+                // Eagle
+                if (symbols.includes('eagle') || symbols.includes('artsiv')) {
+                    confidence += 30;
+                    valueEstimate = 'Very High ($500-$3,500 per fragment)';
+                    recommendation = '🎯 PRIORITY BUY - Armenian eagle fragments (especially double-headed) very collectible';
+                    details.push('Eagle symbol - Armenian national symbol');
+                }
+                
+                // Armenian animals
+                if (symbols.includes('peacock') || symbols.includes('nightingale') || symbols.includes('bird')) {
+                    confidence += 20;
+                    details.push('Bird motifs common in Armenian work');
+                    if (!recommendation) valueEstimate = 'Medium-High ($200-$1,500)';
+                }
+                
+                // Roses/florals
+                if (symbols.includes('rose') || symbols.includes('flower') || symbols.includes('floral')) {
+                    confidence += 15;
+                    details.push('Floral motifs - possible Karabakh');
+                    if (!recommendation) valueEstimate = 'Medium ($150-$800)';
+                }
+                
+                // Color analysis for Armenia
+                if (colors === 'red-blue') {
+                    confidence += 15;
+                    details.push('Classic Armenian color palette (deep reds + indigo)');
+                }
+                
+                // Knot density for Armenia
+                if (knotDensity === 'medium' || knotDensity === 'low') {
+                    confidence += 10;
+                    details.push('Knot density consistent with Armenian tribal work');
+                }
+                
+                // Pile technique
+                if (technique === 'pile') {
+                    confidence += 10;
+                    details.push('Knotted pile - typical Armenian technique');
                 }
             }
             
-            // Bulgaria analysis
-            if (region === 'bulgaria' && technique === 'kilim') {
-                if (symbols.includes('rose') || symbols.includes('chiprovtsi')) {
+            // ===== AZERBAIJAN =====
+            if (region === 'azerbaijan') {
+                confidence += 10;
+                
+                // Prayer rug - HIGHEST VALUE
+                if (symbols.includes('prayer') || symbols.includes('mihrab') || symbols.includes('arch') || symbols.includes('niche')) {
                     confidence += 45;
-                    valueEstimate = 'Very High ($3,000-$40,000)';
-                    recommendation = '🎯 PRIORITY BUY - Check if reversible (identical both sides)!';
+                    valueEstimate = 'Very High ($600-$4,000+ per fragment)';
+                    recommendation = '🎯 PRIORITY BUY - Prayer rug fragments (especially Shirvan) highly valuable. Even partial mihrab worth buying.';
+                    details.push('Prayer niche/mihrab - premium item');
                 }
+                
+                // Lamp/hands motifs
+                if (symbols.includes('lamp') || symbols.includes('hand')) {
+                    confidence += 20;
+                    details.push('Lamp/hands common in prayer rugs');
+                }
+                
+                // High knot density = Kuba/Chi-Chi
+                if (knotDensity === 'very-high' || knotDensity === 'high') {
+                    confidence += 30;
+                    valueEstimate = 'Very High ($500-$3,500 per fragment)';
+                    recommendation = '🎯 PRIORITY BUY - Very fine weaving suggests Kuba or Chi-Chi. Even small fragments worth $500+.';
+                    details.push('Fine weaving - possible Kuba/Chi-Chi premium quality');
+                }
+                
+                // Boteh/paisley
+                if (symbols.includes('boteh') || symbols.includes('paisley') || symbols.includes('buta')) {
+                    confidence += 20;
+                    details.push('Boteh pattern - Azerbaijani/Shirvan indicator');
+                    if (!recommendation) valueEstimate = 'Medium ($120-$700)';
+                }
+                
+                // Star/geometric
+                if (symbols.includes('star') || symbols.includes('geometric') || symbols.includes('medallion')) {
+                    confidence += 15;
+                    details.push('Geometric patterns typical of Azerbaijani work');
+                }
+                
+                // Color analysis
+                if (colors === 'red-blue' || colors === 'black-white') {
+                    confidence += 15;
+                    details.push('Classic Shirvan/Kuba color palette');
+                }
+            }
+            
+            // ===== BULGARIA =====
+            if (region === 'bulgaria') {
+                confidence += 10;
+                
+                if (technique === 'kilim') {
+                    confidence += 20;
+                    details.push('Kilim technique - Bulgaria specialty');
+                    
+                    // Chiprovtsi indicators
+                    if (symbols.includes('rose') || symbols.includes('chiprovtsi') || symbols.includes('flower')) {
+                        confidence += 40;
+                        valueEstimate = 'Very High ($400-$2,500 per fragment)';
+                        recommendation = '🎯 PRIORITY BUY - Possible Chiprovtsi UNESCO! Even fragments valuable. CRITICAL: Check reversibility.';
+                        details.push('Rose motif + kilim = possible Chiprovtsi');
+                    }
+                    
+                    // Natural vibrant colors
+                    if (colors === 'vibrant') {
+                        confidence += 15;
+                        details.push('Vibrant natural dyes typical of Chiprovtsi');
+                    }
+                }
+                
+                // Cross patterns (Bulgarian Christian)
+                if (symbols.includes('cross')) {
+                    confidence += 20;
+                    details.push('Cross patterns - Bulgarian Christian tradition');
+                }
+            }
+            
+            // ===== GEORGIA =====
+            if (region === 'georgia') {
+                confidence += 10;
+                
+                // Cross patterns
+                if (symbols.includes('cross')) {
+                    confidence += 25;
+                    valueEstimate = 'Medium-High ($200-$1,200)';
+                    details.push('Christian cross - Georgian specialty');
+                }
+                
+                // Grape vine
+                if (symbols.includes('grape') || symbols.includes('vine')) {
+                    confidence += 30;
+                    valueEstimate = 'High ($250-$1,500)';
+                    recommendation = '⚡ GOOD VALUE - Georgian fragments undervalued. Grape vine = wine culture.';
+                    details.push('Grape vine - Georgian wine culture symbol');
+                }
+                
+                // Kilims
+                if (technique === 'kilim') {
+                    confidence += 15;
+                    details.push('Georgian kilim fragments often undervalued');
+                }
+            }
+            
+            // ===== ALBANIA =====
+            if (region === 'albania') {
+                confidence += 10;
+                
+                if (technique === 'kilim') {
+                    confidence += 25;
+                    valueEstimate = 'Low-Medium ($30-$400)';
+                    recommendation = '⚡ EMERGING MARKET - Albanian fragments rising value. Buy cheap now, flip for 2-3x in 2-3 years.';
+                    details.push('Albanian kilim - emerging market opportunity');
+                }
+                
+                // Pile rugs rare
+                if (technique === 'pile') {
+                    confidence += 35;
+                    valueEstimate = 'High ($300-$2,000 per fragment)';
+                    recommendation = '🎯 RARE FIND - Albanian pile fragments extremely uncommon!';
+                    details.push('Albanian pile rug - RARE');
+                }
+                
+                // Geometric
+                if (symbols.includes('geometric') || symbols.includes('diamond') || symbols.includes('zigzag')) {
+                    confidence += 15;
+                    details.push('Geometric patterns typical of Albanian work');
+                }
+            }
+            
+            // GENERAL INDICATORS (apply to all regions)
+            
+            // Inscriptions
+            if (symbols.includes('inscription') || symbols.includes('text') || symbols.includes('date') || symbols.includes('letter')) {
+                confidence += 35;
+                valueEstimate = 'Very High (+200-400% premium on any fragment)';
+                recommendation = '🎯 PHOTOGRAPH IMMEDIATELY - Woven inscriptions multiply value dramatically!';
+                details.push('Woven inscriptions - major value multiplier');
+            }
+            
+            // Animals in general
+            if (symbols.includes('animal') || symbols.includes('lion') || symbols.includes('deer') || symbols.includes('horse') || symbols.includes('camel')) {
+                confidence += 15;
+                details.push('Animal motifs increase fragment value');
+            }
+            
+            // Cap confidence at 95%
+            confidence = Math.min(confidence, 95);
+            
+            // Determine verdict
+            let verdict = '';
+            let verdictColor = '';
+            
+            if (confidence >= 75) {
+                verdict = '✅ HIGH CONFIDENCE - Strong indicators present';
+                verdictColor = 'bg-green-700';
+            } else if (confidence >= 50) {
+                verdict = '⚠️ MODERATE CONFIDENCE - Further investigation recommended';
+                verdictColor = 'bg-yellow-700';
+            } else if (confidence >= 30) {
+                verdict = '🤔 LOW-MODERATE - Possible but needs authentication';
+                verdictColor = 'bg-orange-700';
+            } else {
+                verdict = '❌ INSUFFICIENT DATA - Need more information';
+                verdictColor = 'bg-red-700';
             }
             
             resultBox.innerHTML = `
-                <h3 class="text-xl md:text-2xl font-bold text-carpet-gold mb-4">Analysis Results</h3>
+                <h3 class="text-xl md:text-2xl font-bold text-carpet-gold mb-4">Fragment Analysis Results</h3>
                 <div class="space-y-3">
                     <div class="bg-carpet-dark p-4 rounded-lg">
                         <div class="text-sm md:text-base mb-1">Confidence Level:</div>
-                        <div class="text-xl md:text-3xl font-bold text-carpet-gold">${Math.min(confidence, 95)}%</div>
+                        <div class="text-xl md:text-3xl font-bold text-carpet-gold">${confidence}%</div>
                     </div>
                     <div class="bg-carpet-dark p-4 rounded-lg">
-                        <div class="text-sm md:text-base mb-1">Estimated Value:</div>
+                        <div class="text-sm md:text-base mb-1">Fragment Value Range:</div>
                         <div class="text-lg md:text-2xl font-bold text-green-400">${valueEstimate}</div>
+                        <div class="text-xs md:text-sm opacity-70 mt-1">*For typical fragment sizes (6"x6" to 12"x18")</div>
                     </div>
                     ${recommendation ? `<div class="bg-green-700 bg-opacity-50 p-4 rounded-lg border-2 border-green-500"><div class="font-bold text-base md:text-lg">${recommendation}</div></div>` : ''}
+                    <div class="${verdictColor} bg-opacity-70 p-4 rounded-lg border-2 border-current">
+                        <div class="font-bold text-sm md:text-base">${verdict}</div>
+                    </div>
+                    ${details.length > 0 ? `
                     <div class="bg-carpet-dark p-4 rounded-lg">
-                        <div class="font-bold mb-2 text-sm md:text-base">Next Steps:</div>
+                        <div class="font-bold mb-2 text-sm md:text-base">Detection Details:</div>
                         <ul class="list-disc list-inside space-y-1 text-xs md:text-sm">
-                            <li>Photograph front and back in natural light</li>
-                            <li>Count knots per square inch</li>
-                            <li>Check for woven dates/inscriptions</li>
-                            <li>Smell test for synthetic materials</li>
-                            <li>Document seller provenance</li>
+                            ${details.map(d => `<li>${d}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                    <div class="bg-carpet-dark p-4 rounded-lg">
+                        <div class="font-bold mb-2 text-sm md:text-base">Fragment Buying Tips:</div>
+                        <ul class="list-disc list-inside space-y-1 text-xs md:text-sm">
+                            <li>Photograph front AND back - pattern should be visible on reverse</li>
+                            <li>Measure actual size (fragments priced by square inch)</li>
+                            <li>Count knots in 1" square (KPSI = value indicator)</li>
+                            <li>Smell test - chemical = synthetic dyes = walk away</li>
+                            <li>Check edges - original selvedge adds value</li>
+                            <li>Look for abrash (color banding) = natural dyes = pre-1900</li>
+                            <li>Even small dragon/eagle/mihrab fragments worth buying</li>
                         </ul>
                     </div>
                 </div>
@@ -739,19 +950,73 @@
             const detail = document.getElementById('regionDetail');
             const data = getRegionData(region);
             
+            let weaveTypesHTML = '';
+            if (data.weaveTypes) {
+                weaveTypesHTML = `
+                    <div class="bg-gradient-to-r from-yellow-900 to-yellow-800 p-4 md:p-6 rounded-xl mt-4 border-2 border-yellow-600">
+                        <h4 class="text-lg md:text-xl font-bold text-yellow-200 mb-4">🔍 ${data.weaveTypes.title}</h4>
+                        ${data.weaveTypes.types.map(type => `
+                            <div class="bg-black bg-opacity-40 p-4 rounded-lg mb-4 last:mb-0">
+                                <div class="text-base md:text-lg font-bold text-yellow-300 mb-2">${type.name}</div>
+                                
+                                <div class="mb-3">
+                                    <div class="text-xs md:text-sm font-bold text-yellow-200 mb-1">How to Recognize (Touch & Feel):</div>
+                                    <div class="text-xs md:text-sm text-gray-200">${type.howToRecognize}</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="text-xs md:text-sm font-bold text-yellow-200 mb-1">Visual Identification:</div>
+                                    <div class="text-xs md:text-sm text-gray-200">${type.visual}</div>
+                                </div>
+                                
+                                ${type.knotType ? `
+                                <div class="mb-3">
+                                    <div class="text-xs md:text-sm font-bold text-yellow-200 mb-1">Knot Type:</div>
+                                    <div class="text-xs md:text-sm text-gray-200">${type.knotType}</div>
+                                </div>
+                                ` : ''}
+                                
+                                ${type.testTip ? `
+                                <div class="mb-3">
+                                    <div class="text-xs md:text-sm font-bold text-green-300 mb-1">💡 Field Test:</div>
+                                    <div class="text-xs md:text-sm text-gray-200">${type.testTip}</div>
+                                </div>
+                                ` : ''}
+                                
+                                ${type.authentication ? `
+                                <div class="bg-red-900 bg-opacity-40 p-3 rounded border border-red-500">
+                                    <div class="text-xs md:text-sm font-bold text-red-300 mb-1">⚠️ Authentication Key:</div>
+                                    <div class="text-xs md:text-sm text-gray-200">${type.authentication}</div>
+                                </div>
+                                ` : ''}
+                                
+                                ${type.common ? `
+                                <div class="text-xs md:text-sm text-gray-400 italic mt-2">${type.common}</div>
+                                ` : ''}
+                                
+                                ${type.rarity ? `
+                                <div class="bg-yellow-600 bg-opacity-30 p-2 rounded mt-2 text-xs md:text-sm font-bold text-yellow-200">${type.rarity}</div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
             detail.innerHTML = `
                 <h3 class="text-xl md:text-2xl font-bold text-carpet-gold mb-4">${data.name}</h3>
                 <div class="space-y-4 text-sm md:text-base">
                     <div><strong>Peak Period:</strong> ${data.period}</div>
                     <div><strong>Key Types:</strong> ${data.types}</div>
-                    <div><strong>Value Range:</strong> ${data.value}</div>
+                    <div><strong>Fragment Value Range:</strong> ${data.value}</div>
                     <div class="bg-carpet-dark p-4 rounded-lg">
                         <div class="font-bold mb-2">What to Look For:</div>
                         <ul class="list-disc list-inside space-y-1">
                             ${data.lookFor.map(item => `<li>${item}</li>`).join('')}
                         </ul>
                     </div>
-                    ${data.tip ? `<div class="bg-green-700 bg-opacity-30 p-4 rounded-lg border-2 border-green-500"><strong>💡 Field Tip:</strong> ${data.tip}</div>` : ''}
+                    ${weaveTypesHTML}
+                    ${data.tip ? `<div class="bg-green-700 bg-opacity-30 p-4 rounded-lg border-2 border-green-500"><strong>💡 Expert Field Tip:</strong> ${data.tip}</div>` : ''}
                 </div>
             `;
             
@@ -1261,7 +1526,7 @@
                     name: "🇦🇲 Armenian Carpets",
                     period: "1700-1920 (Golden Age)",
                     types: "Karabakh, Kazak, Erivan",
-                    value: "$4,000-$80,000+",
+                    value: "$300-$5,000+ per fragment",
                     lookFor: [
                         "Dragon (vishap) motifs - S-curved forms",
                         "Armenian cross (khachkar) patterns",
@@ -1270,13 +1535,30 @@
                         "Deep indigo + rich madder red colors",
                         "Thick pile with wool warps"
                     ],
-                    tip: "Armenian carpets often have distinctive 'hand' - wool feels coarser than Persian. If you see Armenian letters woven anywhere, photograph immediately. These are rare and valuable."
+                    weaveTypes: {
+                        title: "Armenian Weave Recognition",
+                        types: [
+                            {
+                                name: "Knotted Pile (Most Common)",
+                                howToRecognize: "Turn carpet over - you'll see individual knot 'bumps' on the back. Run your hand against the pile direction - it should feel thick and woolly. Armenian pile is typically THICKER and COARSER than Persian.",
+                                visual: "Back side shows grid of knots. Pile height usually 5-8mm. Wool feels 'grabby' not silky.",
+                                knotType: "Symmetrical (Turkish/Ghiordes) knot - if you pull pile apart and look at base, each tuft wraps around TWO warp threads equally"
+                            },
+                            {
+                                name: "Soumak (Weft-Wrapping)",
+                                howToRecognize: "Back side looks like braided herringbone pattern. NO pile - totally flat. Front has slight diagonal ribbing texture. Feels like heavy fabric, not fuzzy.",
+                                visual: "Diagonal weave visible on back. Looks woven, not knotted. Flat like a kilim but thicker and with diagonal texture.",
+                                common: "Less common than pile. Often used for bags (mafrash) more than floor carpets."
+                            }
+                        ]
+                    },
+                    tip: "Armenian wool feels COARSER than Persian - not soft/silky. If it feels like cashmere, probably not Armenian. Wool should feel substantial, almost rough. Armenian letters woven anywhere = photograph immediately!"
                 },
                 azerbaijan: {
                     name: "🇦🇿 Azerbaijani Carpets",
                     period: "1800-1930 (Peak Quality)",
                     types: "Shirvan, Kuba, Baku, Ganja",
-                    value: "$5,000-$60,000+",
+                    value: "$400-$4,000+ per fragment",
                     lookFor: [
                         "Prayer rugs with mihrab arch - PRIORITY",
                         "Very fine weaving (150-250 KPSI) = Kuba",
@@ -1285,13 +1567,30 @@
                         "Dark blue/black grounds with ivory",
                         "Chi-Chi diagonal lattice (premium)"
                     ],
-                    tip: "Shirvan prayer rugs under $2,000 in good condition = buy immediately. Turn carpet over - pattern should be clearly visible on reverse. If fuzzy/unclear, likely reproduction."
+                    weaveTypes: {
+                        title: "Azerbaijani Weave Recognition",
+                        types: [
+                            {
+                                name: "Fine Knotted Pile (Kuba/Shirvan)",
+                                howToRecognize: "VERY TIGHT weaving - count knots in 1 inch square. If 150-250+ knots = premium Kuba. Back side shows tiny, precise knot grid. Pile very SHORT (3-5mm). Feels dense and crisp, not fluffy.",
+                                visual: "Hold up to light - very little light passes through = tight weave. Pattern on back is CLEAR and detailed, almost as clear as front.",
+                                knotType: "Mostly symmetrical (Turkish) knot. Kuba uses finest knots in all Caucasus."
+                            },
+                            {
+                                name: "Medium Pile (Shirvan Prayer Rugs)",
+                                howToRecognize: "Tighter than Armenian but not as fine as Kuba. 100-150 KPSI typical. Pile height 4-6mm. Back shows clear pattern. Prayer rugs often have cotton WEFT (crosswise threads) with wool warp.",
+                                visual: "Mihrab (prayer niche) visible clearly on both sides. Look for 'lamp' hanging from arch point on front.",
+                                testTip: "Bend carpet - if it's very stiff and doesn't fold easily = tight quality Shirvan weave"
+                            }
+                        ]
+                    },
+                    tip: "Shirvan prayer rugs under $300 in good condition = buy immediately. Turn over - pattern should be CLEARLY visible on reverse like a mirror image. If fuzzy/unclear on back = likely reproduction."
                 },
                 georgia: {
                     name: "🇬🇪 Georgian Carpets",
                     period: "1850-1920",
                     types: "Karachov, Tbilisi, Kilims",
-                    value: "$1,000-$20,000",
+                    value: "$100-$2,000 per fragment",
                     lookFor: [
                         "Christian cross motifs + Caucasian geometric",
                         "Grape vine borders (winemaking tradition)",
@@ -1299,13 +1598,30 @@
                         "Bold stripes in kilims",
                         "Cruciform medallions"
                     ],
-                    tip: "Georgian carpets significantly UNDERVALUED vs Armenian/Azerbaijani. Christian symbolism authenticates Georgian origin. Focus on pieces locals don't recognize value of."
+                    weaveTypes: {
+                        title: "Georgian Weave Recognition",
+                        types: [
+                            {
+                                name: "Kilim (Flat-Weave) - Most Common",
+                                howToRecognize: "NO pile at all - completely flat both sides. Identical pattern front and back. Feels like heavy woven fabric. Look for SLIT-WEAVE technique: small vertical slits where colors meet (run finger along - you'll feel tiny gaps).",
+                                visual: "Turn sideways and look at edge - should be THIN (2-4mm). No fuzz. Geometric patterns with bold color blocks.",
+                                testTip: "Hold up to window - light comes through at color boundaries (the slits). This is NORMAL and correct for slit-weave kilim."
+                            },
+                            {
+                                name: "Low Pile (Karachov)",
+                                howToRecognize: "Thin pile (3-4mm). Coarser weave than Azerbaijani, similar to Armenian but lighter weight. Back shows knot pattern. Wool feels softer than Armenian, less dense than Azerbaijani.",
+                                visual: "Often has long horizontal stripes or bands. Crosses integrated into geometric patterns.",
+                                common: "Less common than kilims. Karachov district specialty."
+                            }
+                        ]
+                    },
+                    tip: "Georgian carpets SIGNIFICANTLY UNDERVALUED vs Armenian/Azerbaijani. Christian cross symbols = authenticates Georgian origin. Focus on pieces locals don't recognize value of. Kilims easiest to authenticate."
                 },
                 albania: {
                     name: "🇦🇱 Albanian Textiles",
                     period: "1850-1970",
                     types: "Kilims (Qilim), Çerga, rare Gjilim pile",
-                    value: "$300-$15,000",
+                    value: "$30-$400 per fragment (kilim), $300-$2,000 (pile)",
                     lookFor: [
                         "Large diamond medallions",
                         "Zigzag patterns",
@@ -1314,13 +1630,30 @@
                         "Albanian pile rugs = RARE, high value",
                         "Distinctive thick cord selvedge"
                     ],
-                    tip: "EMERGING MARKET - prices rising 20-30% annually. Pre-1900 kilims can be purchased for $500-$1,500 that sell for $3,000-$8,000 in Western markets. Focus on documented village provenance."
+                    weaveTypes: {
+                        title: "Albanian Weave Recognition",
+                        types: [
+                            {
+                                name: "Kilim (Qilim) - 90% of Albanian Textiles",
+                                howToRecognize: "SLIT-WEAVE with LARGE SLITS - much bigger gaps than Georgian (sometimes 1-2 inches long). Very bold, simple geometric designs. Feels LOOSE and flexible compared to tight Persian kilims. Dark WARP threads often visible (brown/grey wool, not white cotton).",
+                                visual: "Look at edges (selvedge) - often wrapped with THICK cord/yarn creating a distinctive 'rope' edge. Large diamond shapes common. Primary colors often red, black, white, orange.",
+                                testTip: "Slits are NOT damage - they're intentional! Larger slits = older/more traditional. Some slits sewn closed = normal preservation."
+                            },
+                            {
+                                name: "Pile Rugs (Gjilim) - VERY RARE",
+                                howToRecognize: "If you find Albanian PILE = photograph everything! Very uncommon. Similar construction to Turkish but coarser. Symmetrical knots. Pile medium height (5-7mm). Designs similar to kilim patterns but in pile.",
+                                visual: "Often has MIXED technique - pile field with kilim borders. Village work, not workshop quality.",
+                                rarity: "Albanian pile fragments worth 5-10x more than kilim fragments due to rarity!"
+                            }
+                        ]
+                    },
+                    tip: "EMERGING MARKET - prices rising 20-30% annually. Pre-1950 kilim fragments $30-$150 in Albania sell for $200-$600 in Western markets. Focus on DOCUMENTED VILLAGE PROVENANCE - ask seller which village it's from!"
                 },
                 bulgaria: {
                     name: "🇧🇬 Bulgarian Carpets",
                     period: "1850-1930 (Peak Quality)",
                     types: "Chiprovtsi UNESCO, Kotel, Rhodope",
-                    value: "$800-$40,000",
+                    value: "$200-$2,500 per fragment",
                     lookFor: [
                         "REVERSIBILITY - pattern identical both sides (Chiprovtsi)",
                         "Diagonal ribs on surface texture",
@@ -1329,7 +1662,25 @@
                         "Natural dyes with rich vibrant colors",
                         "Christian crosses + Ottoman patterns"
                     ],
-                    tip: "Chiprovtsi carpets are among most UNDERVALUED European textiles. UNESCO-recognized yet sell 50-70% less than Turkish equivalents. Pre-1920 Chiprovtsi in excellent condition for $3K-$8K would sell $15K-$30K in London/NYC."
+                    weaveTypes: {
+                        title: "Bulgarian Weave Recognition - CRITICAL FOR CHIPROVTSI",
+                        types: [
+                            {
+                                name: "Chiprovtsi Double-Weave (THE PRIZE)",
+                                howToRecognize: "THIS IS THE KEY TEST: Pattern must be PERFECTLY IDENTICAL on both sides - exact same colors, same design, no difference. Run finger across surface - you'll feel DIAGONAL RIBS (like corduroy at 45° angle). This is from oblique interlacing technique. Turn it over 20 times - sides should look identical every time.",
+                                visual: "No 'right' or 'wrong' side - both sides are finished and identical. Slightly THICKER than regular kilim (4-6mm). Geometric rose patterns. Colors stay vibrant (natural dyes hold better in double-weave).",
+                                testTip: "CRITICAL: If pattern is SIMILAR but not IDENTICAL on both sides = NOT true Chiprovtsi! Even small differences = fake. True Chiprovtsi is perfectly reversible.",
+                                authentication: "Look for diagonal ribbing texture + perfect reversibility + rose motifs + all-wool (no cotton). All four must be present!"
+                            },
+                            {
+                                name: "Regular Kilim (Kotel, Rhodope)",
+                                howToRecognize: "Normal slit-weave kilim, not reversible. Pattern shows on both sides but BACK is slightly less clear. No diagonal ribbing. Good quality but not UNESCO-level.",
+                                visual: "Bold geometric patterns. Christian crosses common. Red, black, white, yellow typical colors.",
+                                value: "Still valuable but 1/3 price of true Chiprovtsi"
+                            }
+                        ]
+                    },
+                    tip: "Chiprovtsi carpets among most UNDERVALUED European textiles! UNESCO-recognized yet sell 50-70% less than Turkish equivalents. Pre-1920 Chiprovtsi fragment in excellent condition for $400-$800 would sell $2,000-$5,000 in London/NYC. REVERSIBILITY + DIAGONAL RIBS = authentication keys!"
                 }
             };
             return data[region];
